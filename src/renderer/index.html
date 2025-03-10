@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SuperAgente Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .hidden { display: none !important; }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 9999;
+        }
+        .btn {
+            padding: 10px 15px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>SuperAgente Finanziario - Test</h1>
+    
+    <p>Questa è una pagina di test semplificata per verificare il funzionamento base.</p>
+    
+    <button id="test-btn" class="btn">Test API</button>
+    <button id="show-loading" class="btn">Mostra Loading</button>
+    <button id="hide-loading" class="btn">Nascondi Loading</button>
+    
+    <!-- Loading overlay (inizialmente nascosto) -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div>Elaborazione in corso...</div>
+    </div>
+    
+    <script>
+        // Console log per debug
+        console.log('Script inizializzato');
+        
+        // Controllo che tutti gli elementi esistano
+        const testBtn = document.getElementById('test-btn');
+        const showLoadingBtn = document.getElementById('show-loading');
+        const hideLoadingBtn = document.getElementById('hide-loading');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
+        console.log('Elementi:', { testBtn, showLoadingBtn, hideLoadingBtn, loadingOverlay });
+        
+        // Evento per testare l'API
+        if (testBtn) {
+            testBtn.addEventListener('click', async () => {
+                if (window.superAgenteAPI) {
+                    console.log('API disponibile');
+                    alert('API SuperAgente disponibile!');
+                } else {
+                    console.error('API non disponibile');
+                    alert('API SuperAgente NON disponibile!');
+                }
+            });
+        }
+        
+        // Eventi per mostrare/nascondere il loading
+        if (showLoadingBtn && loadingOverlay) {
+            showLoadingBtn.addEventListener('click', () => {
+                console.log('Mostro loading');
+                loadingOverlay.classList.remove('hidden');
+            });
+        }
+        
+        if (hideLoadingBtn && loadingOverlay) {
+            hideLoadingBtn.addEventListener('click', () => {
+                console.log('Nascondo loading');
+                loadingOverlay.classList.add('hidden');
+            });
+        }
+        
+        // Nascondi esplicitamente il loading all'avvio
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+            console.log('Loading nascosto all\'avvio');
+        }
+    </script>
+</body>
+</html>
