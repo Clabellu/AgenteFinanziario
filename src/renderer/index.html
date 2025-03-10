@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SuperAgente Finanziario</title>
+    <style>
+        /* Stili base */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .hidden { display: none !important; }
+        
+        /* Header */
+        header { background-color: #0066cc; color: white; padding: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .navbar-brand { font-size: 1.5rem; font-weight: bold; }
+        
+        /* Progress steps */
+        .progress-steps { display: flex; list-style: none; padding: 0; margin: 20px 0; background-color: white; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-steps li { flex: 1; text-align: center; padding: 15px 10px; border-right: 1px solid #eee; position: relative; cursor: pointer; color: #999; }
+        .progress-steps li.active { color: #0066cc; font-weight: bold; }
+        .progress-steps li.disabled { cursor: not-allowed; opacity: 0.6; }
+        
+        /* Tabs */
+        .tab-content { background-color: white; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .input-group { display: flex; }
+        
+        /* Buttons */
+        .btn { display: inline-block; padding: 10px 20px; font-size: 16px; border: none; border-radius: 4px; cursor: pointer; text-align: center; }
+        .btn-primary { background-color: #0066cc; color: white; }
+        .btn-outline-secondary { background-color: transparent; color: #6c757d; border: 1px solid #6c757d; }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0066cc;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Utilities */
+        .d-flex { display: flex; }
+        .justify-content-between { justify-content: space-between; }
+        .mt-4 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="navbar-brand">SuperAgente Finanziario</div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Progress Steps -->
+        <ul class="progress-steps">
+            <li class="active" data-tab="indicators">1. Indicatori</li>
+            <li class="disabled" data-tab="analysis">2. Analisi</li>
+            <li class="disabled" data-tab="optimizations">3. Ottimizzazioni</li>
+            <li class="disabled" data-tab="scenarios">4. Scenari</li>
+            <li class="disabled" data-tab="report">5. Report</li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Indicators Tab -->
+            <div class="tab-pane active" id="indicators-tab">
+                <h2>Inserimento Indicatori Finanziari</h2>
+                <p>Inserisci i valori degli indicatori finanziari più importanti per avviare l'analisi.</p>
+                
+                <!-- Sostituisci la sezione del form con questo contenuto più completo -->
+                <form id="indicators-form">
+    <!-- Liquidità -->
+    <div class="card">
+        <div class="card-header">Liquidità</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="margine-tesoreria">Margine di tesoreria</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="margine-tesoreria" name="margineTesoreria">
+                        <div class="input-group-append">
+                            <span class="input-group-text">€</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="capitale-circolante-netto">Capitale circolante netto</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="capitale-circolante-netto" name="capitaleCircolanteNetto">
+                        <div class="input-group-append">
+                            <span class="input-group-text">€</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="liquidita-corrente">Liquidità corrente</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="liquidita-corrente" name="liquiditaCorrente">
+                        <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Struttura -->
+    <div class="card">
+        <div class="card-header">Struttura</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="margine-struttura">Margine di struttura</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="margine-struttura" name="margineStruttura">
+                        <div class="input-group-append">
+                            <span class="input-group-text">€</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="indice-capitalizzazione">Indice di capitalizzazione</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="indice-capitalizzazione" name="indiceCapitalizzazione">
+                        <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Redditività -->
+    <div class="card">
+        <div class="card-header">Redditività</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="ebitda">EBITDA</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="ebitda" name="ebitda">
+                        <div class="input-group-append">
+                            <span class="input-group-text">€</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="redditCapitaleInvestito">Redditività capitale investito</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="redditCapitaleInvestito" name="redditCapitaleInvestito">
+                        <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="redditCapitaleProprio">Redditività capitale proprio</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="redditCapitaleProprio" name="redditCapitaleProprio">
+                        <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Indebitamento -->
+    <div class="card">
+        <div class="card-header">Indebitamento</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="debiti-totali-ebitda">Debiti totali/EBITDA</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="debiti-totali-ebitda" name="debitiTotaliEbitda">
+                        <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="em-score">EM Score</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" class="form-control" id="em-score" name="emScore">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-outline-secondary" id="load-sample-btn">Carica Esempio</button>
+        <button type="submit" class="btn btn-primary" id="analyze-btn">Analizza Indicatori</button>
+    </div>
+                </form>
+            </div>
+            
+            <!-- Analysis Tab (inizialmente nascosto) -->
+            <div class="tab-pane" id="analysis-tab">
+                <h2>Analisi Finanziaria</h2>
+                <div id="analysis-content">
+                    <p>Caricamento analisi in corso...</p>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary" id="back-to-indicators-btn">Indietro</button>
+                    <button type="button" class="btn btn-primary" id="generate-optimizations-btn">Genera Ottimizzazioni</button>
+                </div>
+            </div>
+
+            <!-- Optimizations Tab (aggiungi questo dopo il tab Analysis) -->
+            <div class="tab-pane" id="optimizations-tab">
+                 <h2>Selezione Ottimizzazioni</h2>
+                 <p>Seleziona le ottimizzazioni che ritieni più adatte alla tua situazione:</p>
+    
+                 <div id="optimizations-content">
+                      <p>Caricamento ottimizzazioni in corso...</p>
+             </div>
+    
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-outline-secondary" id="back-to-analysis-btn">Indietro</button>
+        <button type="button" class="btn btn-primary" id="validate-optimizations-btn">Valida e Genera Scenari</button>
+    </div>
+</div>
+            
+            <!-- Altre tab panes... -->
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p id="loading-message">Elaborazione in corso...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Variabili principali
+        let currentSessionId = null;
+        
+        // Elementi DOM
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingMessage = document.getElementById('loading-message');
+        const progressSteps = document.querySelectorAll('.progress-steps li');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        // Form elements
+        const indicatorsForm = document.getElementById('indicators-form');
+        const loadSampleBtn = document.getElementById('load-sample-btn');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        
+        // Analysis elements
+        const analysisContent = document.getElementById('analysis-content');
+        const backToIndicatorsBtn = document.getElementById('back-to-indicators-btn');
+        const generateOptimizationsBtn = document.getElementById('generate-optimizations-btn');
+        
+        // Log di debug
+        console.log('Script inizializzato');
+        console.log('Elementi DOM trovati:', {
+            loadingOverlay,
+            progressSteps,
+            tabPanes,
+            indicatorsForm,
+            loadSampleBtn,
+            analyzeBtn
+        });
+        
+        // Funzioni di utilità
+        function showLoading(message = 'Elaborazione in corso...') {
+            if (loadingMessage) loadingMessage.textContent = message;
+            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+            console.log('Loading mostrato:', message);
+        }
+        
+        function hideLoading() {
+            if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            console.log('Loading nascosto');
+        }
+        
+        function switchTab(tabName) {
+            console.log('Cambio tab a:', tabName);
+            
+            // Aggiorna progress steps
+            progressSteps.forEach(step => {
+                step.classList.remove('active');
+                if (step.dataset.tab === tabName) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Aggiorna tab panes
+            tabPanes.forEach(pane => {
+                pane.classList.remove('active');
+                if (pane.id === `${tabName}-tab`) {
+                    pane.classList.add('active');
+                }
+            });
+        }
+        
+        function enableTab(tabName) {
+            // Trova l'indice del tab
+            const tabIndex = Array.from(progressSteps).findIndex(step => step.dataset.tab === tabName);
+            
+            // Abilita il tab e segna i tab precedenti come completati
+            progressSteps.forEach((step, index) => {
+                if (index <= tabIndex) {
+                    step.classList.remove('disabled');
+                }
+            });
+            
+            console.log(`Tab ${tabName} abilitato`);
+        }
+        
+        // EVENT HANDLERS
+        
+        // Form submission
+        if (indicatorsForm) {
+            indicatorsForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                console.log('Form sottomesso');
+                
+                // Raccogli i dati del form
+                const formData = new FormData(indicatorsForm);
+                const indicators = {};
+                
+                for (const [key, value] of formData.entries()) {
+                    if (value.trim() !== '') {
+                        indicators[key] = parseFloat(value);
+                    }
+                }
+                
+                console.log('Indicatori raccolti:', indicators);
+                
+                // Verifica i dati minimi
+                if (Object.keys(indicators).length < 2) {
+                    alert('Inserisci almeno due indicatori per avviare l\'analisi.');
+                    return;
+                }
+                
+                // Mostra il loading
+                showLoading('Analisi finanziaria in corso...');
+                
+                try {
+                    // Verifica disponibilità API
+                    if (!window.superAgenteAPI) {
+                        throw new Error('API SuperAgente non disponibile');
+                    }
+                    
+                    // Chiama l'API per l'analisi
+                    console.log('Chiamata API analyze-financial-health');
+                    const result = await window.superAgenteAPI.analyzeFinancialHealth(indicators);
+                    console.log('Risultato analisi:', result);
+                    
+                    // Salva l'ID sessione
+                    currentSessionId = result.sessionId;
+                    
+                    // Mostra i risultati
+                    if (analysisContent) {
+                        analysisContent.innerHTML = `<div class="analysis-result">${result.analysis.analysis}</div>`;
+                    }
+                    
+                    // Abilita il tab di analisi
+                    enableTab('analysis');
+                    
+                    // Passa al tab di analisi
+                    switchTab('analysis');
+                } catch (error) {
+                    console.error('Errore durante l\'analisi:', error);
+                    alert(`Errore durante l'analisi: ${error.message}`);
+                } finally {
+                    // Nascondi il loading
+                    hideLoading();
+                }
+            });
+        }
+        
+        // Caricamento dati di esempio
+        if (loadSampleBtn) {
+            loadSampleBtn.addEventListener('click', () => {
+                console.log('Caricamento dati esempio');
+                
+                // Dati di esempio
+                const sampleData = {
+                    margineStruttura: 86033,
+                    ebitda: 61435,
+                    indiceCapitalizzazione: 62.84
+                };
+                
+                // Compila il form
+                document.getElementById('margine-struttura').value = sampleData.margineStruttura;
+                document.getElementById('ebitda').value = sampleData.ebitda;
+                document.getElementById('indice-capitalizzazione').value = sampleData.indiceCapitalizzazione;
+                
+                alert('Dati di esempio caricati');
+            });
+        }
+        
+        // Torna agli indicatori
+        if (backToIndicatorsBtn) {
+            backToIndicatorsBtn.addEventListener('click', () => {
+                switchTab('indicators');
+            });
+        }
+        
+        // Genera ottimizzazioni
+        if (generateOptimizationsBtn) {
+            generateOptimizationsBtn.addEventListener('click', () => {
+                alert('Funzionalità in costruzione: Generazione ottimizzazioni');
+                // Qui implementeremo la chiamata alle API per le ottimizzazioni
+            });
+        }
+        
+        // INIZIALIZZAZIONE
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM completamente caricato');
+            
+            // Nascondi il loading overlay all'avvio
+            hideLoading();
+        });
+    </script>
+</body>
+</html>
