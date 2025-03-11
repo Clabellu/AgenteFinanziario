@@ -333,3 +333,7 @@ footer {
     margin-bottom: 10px;
     color: #0066cc;
 }
+
+.hidden{
+    display: none !important;
+}

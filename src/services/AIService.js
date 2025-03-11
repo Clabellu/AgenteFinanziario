@@ -51,6 +51,9 @@ class AIService {
       throw new Error(`Chat AI fallita: ${error.message}`);
     }
   }
+
+
 }
+
 
 module.exports = AIService; 

@@ -7,6 +7,7 @@ const AgentOrchestrator = require('../orchestrator/AgentOrchestrator');
 // Mappa per tenere traccia degli orchestratori per sessione
 const sessionOrchestrators = new Map();
 
+
 function setupIpcHandlers(ipcMain) {
   console.log('Configurazione degli handler IPC...');
   
@@ -221,5 +222,7 @@ function setupIpcHandlers(ipcMain) {
   
   console.log('Configurazione degli handler IPC completata');
 }
+
+
 
 module.exports = { setupIpcHandlers };
