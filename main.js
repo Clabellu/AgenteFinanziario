@@ -1,3 +1,4 @@
+// main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { setupIpcHandlers } = require('./src/main/ipc-handlers');
@@ -6,6 +7,8 @@ const { setupIpcHandlers } = require('./src/main/ipc-handlers');
 let mainWindow;
 
 function createWindow() {
+  console.log('Creazione della finestra principale...');
+  
   // Crea la finestra del browser
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -24,7 +27,7 @@ function createWindow() {
   // Apri DevTools in sviluppo
   mainWindow.webContents.openDevTools();
 
-  console.log('Finestra principale creata, preload configurato su:', path.join(_dirname, 'preload.js'));
+  console.log('Finestra principale creata, preload configurato su:', path.join(__dirname, 'preload.js'));
 
   // Quando la finestra viene chiusa
   mainWindow.on('closed', function () {
@@ -34,6 +37,7 @@ function createWindow() {
 
 // Quando Electron ha terminato l'inizializzazione
 app.whenReady().then(() => {
+  console.log('Electron pronto, inizializzazione dell\'applicazione...');
   createWindow();
   setupIpcHandlers(ipcMain);
 
@@ -46,4 +50,8 @@ app.whenReady().then(() => {
 // Chiudi l'applicazione quando tutte le finestre sono chiuse
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Errore non gestito:', error);
 });

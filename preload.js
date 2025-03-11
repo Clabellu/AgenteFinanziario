@@ -1,38 +1,123 @@
+// preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Espone API sicure dal processo principale al renderer
 contextBridge.exposeInMainWorld('superAgenteAPI', {
   // Analisi finanziaria
-  analyzeFinancialHealth: (indicators) => 
-    ipcRenderer.invoke('analyze-financial-health', indicators),
+  analyzeFinancialHealth: async (indicators) => {
+    console.log('preload: richiesta analyzeFinancialHealth', indicators);
+    try {
+      const result = await ipcRenderer.invoke('analyze-financial-health', indicators);
+      console.log('preload: risultato analyzeFinancialHealth', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in analyzeFinancialHealth', error);
+      throw error;
+    }
+  },
   
   // Ottimizzazioni
-  identifyOptimizations: (sessionId) =>
-    ipcRenderer.invoke('identify-optimizations', sessionId),
+  identifyOptimizations: async (sessionId) => {
+    console.log('preload: richiesta identifyOptimizations', sessionId);
+    try {
+      const result = await ipcRenderer.invoke('identify-optimizations', sessionId);
+      console.log('preload: risultato identifyOptimizations', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in identifyOptimizations', error);
+      throw error;
+    }
+  },
   
   // Selezione ottimizzazioni
-  updateSelectedOptimizations: (sessionId, selectedIds) =>
-    ipcRenderer.invoke('update-selected-optimizations', sessionId, selectedIds),
+  updateSelectedOptimizations: async (sessionId, selectedIds) => {
+    console.log('preload: richiesta updateSelectedOptimizations', { sessionId, selectedIds });
+    try {
+      const result = await ipcRenderer.invoke('update-selected-optimizations', sessionId, selectedIds);
+      console.log('preload: risultato updateSelectedOptimizations', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in updateSelectedOptimizations', error);
+      throw error;
+    }
+  },
   
   // Validazione
-  validateSelections: (sessionId) =>
-    ipcRenderer.invoke('validate-selections', sessionId),
+  validateSelections: async (sessionId) => {
+    console.log('preload: richiesta validateSelections', sessionId);
+    try {
+      const result = await ipcRenderer.invoke('validate-selections', sessionId);
+      console.log('preload: risultato validateSelections', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in validateSelections', error);
+      throw error;
+    }
+  },
   
   // Scenari
-  generateScenarios: (sessionId) =>
-    ipcRenderer.invoke('generate-scenarios', sessionId),
+  generateScenarios: async (sessionId) => {
+    console.log('preload: richiesta generateScenarios', sessionId);
+    try {
+      const result = await ipcRenderer.invoke('generate-scenarios', sessionId);
+      console.log('preload: risultato generateScenarios', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in generateScenarios', error);
+      throw error;
+    }
+  },
   
   // Report
-  generateReport: (sessionId) =>
-    ipcRenderer.invoke('generate-report', sessionId),
+  generateReport: async (sessionId) => {
+    console.log('preload: richiesta generateReport', sessionId);
+    try {
+      const result = await ipcRenderer.invoke('generate-report', sessionId);
+      console.log('preload: risultato generateReport', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in generateReport', error);
+      throw error;
+    }
+  },
   
   // Esportazione file
-  saveDocumentAs: (data, defaultPath) =>
-    ipcRenderer.invoke('save-document-as', data, defaultPath),
+  saveDocumentAs: async (data, defaultPath) => {
+    console.log('preload: richiesta saveDocumentAs', { defaultPath });
+    try {
+      const result = await ipcRenderer.invoke('save-document-as', data, defaultPath);
+      console.log('preload: risultato saveDocumentAs', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in saveDocumentAs', error);
+      throw error;
+    }
+  },
     
   // Salvataggio/Caricamento stato
-  saveSession: (sessionData, filePath) =>
-    ipcRenderer.invoke('save-session', sessionData, filePath),
-  loadSession: () =>
-    ipcRenderer.invoke('load-session')
+  saveSession: async (sessionData, filePath) => {
+    console.log('preload: richiesta saveSession');
+    try {
+      const result = await ipcRenderer.invoke('save-session', sessionData, filePath);
+      console.log('preload: risultato saveSession', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in saveSession', error);
+      throw error;
+    }
+  },
+  
+  loadSession: async () => {
+    console.log('preload: richiesta loadSession');
+    try {
+      const result = await ipcRenderer.invoke('load-session');
+      console.log('preload: risultato loadSession', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in loadSession', error);
+      throw error;
+    }
+  }
 });
+
+console.log('Preload script eseguito, API superAgenteAPI esposta');

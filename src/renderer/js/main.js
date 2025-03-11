@@ -1,291 +1,313 @@
-// Variabili principali
-let currentSessionId = null;
-let currentOptimizations = [];
-let validationResult = null;
-let scenariosData = null;
-let reportData = null;
-
-// Elementi DOM principali
-const loadingOverlay = document.getElementById('loading-overlay');
-const loadingMessage = document.getElementById('loading-message');
-const progressSteps = document.querySelectorAll('.progress-steps li');
-const tabPanes = document.querySelectorAll('.tab-pane');
-
-// Elementi form
-const indicatorsForm = document.getElementById('indicators-form');
-const loadSampleBtn = document.getElementById('load-sample-btn');
-const analyzeBtn = document.getElementById('analyze-btn');
-
-// Analisi
-const analysisContent = document.getElementById('analysis-content');
-const backToIndicatorsBtn = document.getElementById('back-to-indicators-btn');
-const generateOptimizationsBtn = document.getElementById('generate-optimizations-btn');
-
-// Ottimizzazioni
-const optimizationsContent = document.getElementById('optimizations-content');
-const backToAnalysisBtn = document.getElementById('back-to-analysis-btn');
-const validateOptimizationsBtn = document.getElementById('validate-optimizations-btn');
-const optimizationTemplate = document.getElementById('optimization-template');
-
-// Scenari
-const scenariosContent = document.getElementById('scenarios-content');
-const backToOptimizationsBtn = document.getElementById('back-to-optimizations-btn');
-const generateReportBtn = document.getElementById('generate-report-btn');
-
-// Report
-const reportContent = document.getElementById('report-content');
-const backToScenariosBtn = document.getElementById('back-to-scenarios-btn');
-const exportReportBtn = document.getElementById('export-report-btn');
-
-// Funzioni di utilità
-function showLoading(message = 'Elaborazione in corso...') {
-    loadingMessage.textContent = message;
-    loadingOverlay.classList.remove('hidden');
-    console.log('Loading mostrato:', message);
-}
-
-function hideLoading() {
-    loadingOverlay.classList.add('hidden');
-    console.log('Loading nascosto');
-}
-
-function switchTab(tabName) {
-    console.log('Cambio tab a:', tabName);
-    
-    // Aggiorna progress steps
-    progressSteps.forEach(step => {
-        step.classList.remove('active');
-        if (step.dataset.tab === tabName) {
-            step.classList.add('active');
-        }
-    });
-    
-    // Aggiorna tab panes
-    tabPanes.forEach(pane => {
-        pane.classList.remove('active');
-        if (pane.id === `${tabName}-tab`) {
-            pane.classList.add('active');
-        }
-    });
-}
-
-function enableTab(tabName) {
-    // Trova l'indice del tab
-    const tabIndex = Array.from(progressSteps).findIndex(step => step.dataset.tab === tabName);
-    
-    // Abilita il tab e segna i tab precedenti come completati
-    progressSteps.forEach((step, index) => {
-        if (index <= tabIndex) {
-            step.classList.remove('disabled');
-        }
-    });
-    
-    console.log(`Tab ${tabName} abilitato`);
-}
-
-// Funzioni di gestione contenuti
-function renderOptimizations(optimizations) {
-    optimizationsContent.innerHTML = '';
-    
-    if (!optimizations || optimizations.length === 0) {
-        optimizationsContent.innerHTML = '<p>Nessuna ottimizzazione disponibile.</p>';
-        return;
-    }
-    
-    // Salva le ottimizzazioni
-    currentOptimizations = optimizations;
-    
-    // Crea una card per ogni ottimizzazione
-    optimizations.forEach((opt, index) => {
-        const template = optimizationTemplate.content.cloneNode(true);
-        
-        // Selettori
-        const card = template.querySelector('.optimization-card');
-        const title = template.querySelector('.optimization-title');
-        const description = template.querySelector('.optimization-description');
-        const checkbox = template.querySelector('.optimization-checkbox');
-        const impact = template.querySelector('.optimization-impact');
-        const difficulty = template.querySelector('.optimization-difficulty');
-        const timeframe = template.querySelector('.optimization-timeframe');
-        const category = template.querySelector('.optimization-category');
-        
-        // Popola la card
-        card.id = `opt-${opt.id}`;
-        title.textContent = opt.title;
-        description.textContent = opt.description;
-        checkbox.id = `checkbox-${opt.id}`;
-        checkbox.dataset.optId = opt.id;
-        
-        // Styling per impact
-        impact.textContent = `Impatto: ${opt.impact}`;
-        impact.classList.add(opt.impact === 'Alto' ? 'badge-success' : 
-                            opt.impact === 'Medio' ? 'badge-primary' : 'badge-secondary');
-        
-        // Styling per difficulty
-        difficulty.textContent = `Difficoltà: ${opt.difficulty}`;
-        difficulty.classList.add(opt.difficulty === 'Bassa' ? 'badge-success' : 
-                                opt.difficulty === 'Media' ? 'badge-warning' : 'badge-danger');
-        
-        // Styling per timeframe
-        timeframe.textContent = `Tempo: ${opt.timeframe}`;
-        timeframe.classList.add(opt.timeframe === 'Breve' ? 'badge-success' : 
-                               opt.timeframe === 'Medio' ? 'badge-primary' : 'badge-secondary');
-        
-        // Categoria
-        category.textContent = `Categoria: ${opt.category}`;
-        
-        // Aggiungi la card
-        optimizationsContent.appendChild(template);
-    });
-}
-
-function renderScenarios(scenarios) {
-    scenariosContent.innerHTML = '';
-    
-    if (!scenarios) {
-        scenariosContent.innerHTML = '<p>Nessuno scenario disponibile.</p>';
-        return;
-    }
-    
-    // Salva gli scenari
-    scenariosData = scenarios;
-    
-    // Crea il contenuto HTML
-    let html = `
-        <div class="scenarios-container">
-            <h3>Risultati della Simulazione</h3>
-            <div class="card mb-4">
-                <div class="card-header">Confronto tra Scenari</div>
-                <div class="card-body">
-                    ${scenarios.comparison || 'Nessun confronto disponibile.'}
-                </div>
-            </div>
-            
-            <div class="row">
-                <!-- Scenario Base -->
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">Scenario Base</div>
-                        <div class="card-body">
-                            <p><strong>Descrizione:</strong> ${scenarios.base.description}</p>
-                            <h5>Indicatori Chiave:</h5>
-                            <ul>
-                                ${Object.entries(scenarios.base.keyMetrics || {}).map(([key, value]) => 
-                                  `<li>${key}: ${value}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Scenario Realistico -->
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">Scenario Realistico</div>
-                        <div class="card-body">
-                            <p><strong>Descrizione:</strong> ${scenarios.realistic.description}</p>
-                            <h5>Indicatori Chiave:</h5>
-                            <ul>
-                                ${Object.entries(scenarios.realistic.keyMetrics || {}).map(([key, value]) => 
-                                  `<li>${key}: ${value}</li>`).join('')}
-                            </ul>
-                            <h5>Ottimizzazioni:</h5>
-                            <ul>
-                                ${(scenarios.realistic.optimizations || []).map(opt => 
-                                  `<li>${opt}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Scenario Ottimistico -->
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">Scenario Ottimistico</div>
-                        <div class="card-body">
-                            <p><strong>Descrizione:</strong> ${scenarios.optimistic.description}</p>
-                            <h5>Indicatori Chiave:</h5>
-                            <ul>
-                                ${Object.entries(scenarios.optimistic.keyMetrics || {}).map(([key, value]) => 
-                                  `<li>${key}: ${value}</li>`).join('')}
-                            </ul>
-                            <h5>Ottimizzazioni:</h5>
-                            <ul>
-                                ${(scenarios.optimistic.optimizations || []).map(opt => 
-                                  `<li>${opt}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    scenariosContent.innerHTML = html;
-}
-
-function renderReport(report) {
-    reportContent.innerHTML = '';
-    
-    if (!report) {
-        reportContent.innerHTML = '<p>Nessun report disponibile.</p>';
-        return;
-    }
-    
-    // Salva il report
-    reportData = report;
-    
-    // Crea il contenuto HTML
-    let html = `
-        <div class="report-container">
-            <h3>${report.title}</h3>
-            <p>Data: ${report.date}</p>
-            
-            <div class="card mb-4">
-                <div class="card-header">Executive Summary</div>
-                <div class="card-body">
-                    ${report.sections.executive}
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">Analisi Finanziaria</div>
-                <div class="card-body">
-                    <h5>Panoramica</h5>
-                    <div>${report.sections.financial.overview}</div>
-                    
-                    <h5>Punti di Forza</h5>
-                    <div>${report.sections.financial.strengths}</div>
-                    
-                    <h5>Criticità</h5>
-                    <div>${report.sections.financial.weaknesses}</div>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">Raccomandazioni</div>
-                <div class="card-body">
-                    ${report.sections.recommendations}
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">Piano di Implementazione</div>
-                <div class="card-body">
-                    ${report.sections.implementation}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    reportContent.innerHTML = html;
-}
-
-// EVENT HANDLERS
+// src/renderer/js/main.js
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM completamente caricato');
+    // Variabili principali
+    let currentSessionId = null;
+    let currentOptimizations = [];
+    let validationResult = null;
+    let scenariosData = null;
+    let reportData = null;
+
+    // Elementi DOM principali
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingMessage = document.getElementById('loading-message');
+    const progressSteps = document.querySelectorAll('.progress-steps li');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    // Immediatamente nascondi l'overlay di caricamento all'inizio
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+        console.log('Loading nascosto all\'avvio');
+    } else {
+        console.error('Elemento loading-overlay non trovato!');
+    }
+
+    // Elementi form
+    const indicatorsForm = document.getElementById('indicators-form');
+    const loadSampleBtn = document.getElementById('load-sample-btn');
     
-    // Nascondi il loading overlay all'avvio
-    hideLoading();
+    // Analisi
+    const analysisContent = document.getElementById('analysis-content');
+    const backToIndicatorsBtn = document.getElementById('back-to-indicators-btn');
+    const generateOptimizationsBtn = document.getElementById('generate-optimizations-btn');
+
+    // Ottimizzazioni
+    const optimizationsContent = document.getElementById('optimizations-content');
+    const backToAnalysisBtn = document.getElementById('back-to-analysis-btn');
+    const validateOptimizationsBtn = document.getElementById('validate-optimizations-btn');
+    const optimizationTemplate = document.getElementById('optimization-template');
+
+    // Scenari
+    const scenariosContent = document.getElementById('scenarios-content');
+    const backToOptimizationsBtn = document.getElementById('back-to-optimizations-btn');
+    const generateReportBtn = document.getElementById('generate-report-btn');
+
+    // Report
+    const reportContent = document.getElementById('report-content');
+    const backToScenariosBtn = document.getElementById('back-to-scenarios-btn');
+    const exportReportBtn = document.getElementById('export-report-btn');
+
+    console.log('Elementi DOM trovati:', {
+        loadingOverlay,
+        progressSteps,
+        tabPanes,
+        indicatorsForm,
+        loadSampleBtn,
+        generateOptimizationsBtn,
+        validateOptimizationsBtn
+    });
+
+    // Funzioni di utilità
+    function showLoading(message = 'Elaborazione in corso...') {
+        if (!loadingOverlay || !loadingMessage) {
+            console.error('Elementi loading non trovati');
+            return;
+        }
+        loadingMessage.textContent = message;
+        loadingOverlay.classList.remove('hidden');
+        console.log('Loading mostrato:', message);
+    }
+
+    function hideLoading() {
+        if (!loadingOverlay) {
+            console.error('Elemento loading-overlay non trovato');
+            return;
+        }
+        loadingOverlay.classList.add('hidden');
+        console.log('Loading nascosto');
+    }
+
+    function switchTab(tabName) {
+        console.log('Cambio tab a:', tabName);
+        
+        // Aggiorna progress steps
+        progressSteps.forEach(step => {
+            step.classList.remove('active');
+            if (step.dataset.tab === tabName) {
+                step.classList.add('active');
+            }
+        });
+        
+        // Aggiorna tab panes
+        tabPanes.forEach(pane => {
+            pane.classList.remove('active');
+            if (pane.id === `${tabName}-tab`) {
+                pane.classList.add('active');
+            }
+        });
+    }
+
+    function enableTab(tabName) {
+        // Trova l'indice del tab
+        const tabIndex = Array.from(progressSteps).findIndex(step => step.dataset.tab === tabName);
+        
+        // Abilita il tab e segna i tab precedenti come completati
+        progressSteps.forEach((step, index) => {
+            if (index <= tabIndex) {
+                step.classList.remove('disabled');
+            }
+        });
+        
+        console.log(`Tab ${tabName} abilitato`);
+    }
+
+    // Funzioni di gestione contenuti
+    function renderOptimizations(optimizations) {
+        optimizationsContent.innerHTML = '';
+        
+        if (!optimizations || optimizations.length === 0) {
+            optimizationsContent.innerHTML = '<p>Nessuna ottimizzazione disponibile.</p>';
+            return;
+        }
+        
+        // Salva le ottimizzazioni
+        currentOptimizations = optimizations;
+        
+        // Crea una card per ogni ottimizzazione
+        optimizations.forEach((opt, index) => {
+            const template = optimizationTemplate.content.cloneNode(true);
+            
+            // Selettori
+            const card = template.querySelector('.optimization-card');
+            const title = template.querySelector('.optimization-title');
+            const description = template.querySelector('.optimization-description');
+            const checkbox = template.querySelector('.optimization-checkbox');
+            const impact = template.querySelector('.optimization-impact');
+            const difficulty = template.querySelector('.optimization-difficulty');
+            const timeframe = template.querySelector('.optimization-timeframe');
+            const category = template.querySelector('.optimization-category');
+            
+            // Popola la card
+            card.id = `opt-${opt.id}`;
+            title.textContent = opt.title;
+            description.textContent = opt.description;
+            checkbox.id = `checkbox-${opt.id}`;
+            checkbox.dataset.optId = opt.id;
+            
+            // Styling per impact
+            impact.textContent = `Impatto: ${opt.impact}`;
+            impact.classList.add(opt.impact === 'Alto' ? 'badge-success' : 
+                                opt.impact === 'Medio' ? 'badge-primary' : 'badge-secondary');
+            
+            // Styling per difficulty
+            difficulty.textContent = `Difficoltà: ${opt.difficulty}`;
+            difficulty.classList.add(opt.difficulty === 'Bassa' ? 'badge-success' : 
+                                    opt.difficulty === 'Media' ? 'badge-warning' : 'badge-danger');
+            
+            // Styling per timeframe
+            timeframe.textContent = `Tempo: ${opt.timeframe}`;
+            timeframe.classList.add(opt.timeframe === 'Breve' ? 'badge-success' : 
+                                   opt.timeframe === 'Medio' ? 'badge-primary' : 'badge-secondary');
+            
+            // Categoria
+            category.textContent = `Categoria: ${opt.category}`;
+            
+            // Aggiungi la card
+            optimizationsContent.appendChild(template);
+        });
+    }
+
+    function renderScenarios(scenarios) {
+        scenariosContent.innerHTML = '';
+        
+        if (!scenarios) {
+            scenariosContent.innerHTML = '<p>Nessuno scenario disponibile.</p>';
+            return;
+        }
+        
+        // Salva gli scenari
+        scenariosData = scenarios;
+        
+        // Crea il contenuto HTML
+        let html = `
+            <div class="scenarios-container">
+                <h3>Risultati della Simulazione</h3>
+                <div class="card mb-4">
+                    <div class="card-header">Confronto tra Scenari</div>
+                    <div class="card-body">
+                        ${scenarios.comparison || 'Nessun confronto disponibile.'}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Scenario Base -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">Scenario Base</div>
+                            <div class="card-body">
+                                <p><strong>Descrizione:</strong> ${scenarios.base.description}</p>
+                                <h5>Indicatori Chiave:</h5>
+                                <ul>
+                                    ${Object.entries(scenarios.base.keyMetrics || {}).map(([key, value]) => 
+                                      `<li>${key}: ${value}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scenario Realistico -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">Scenario Realistico</div>
+                            <div class="card-body">
+                                <p><strong>Descrizione:</strong> ${scenarios.realistic.description}</p>
+                                <h5>Indicatori Chiave:</h5>
+                                <ul>
+                                    ${Object.entries(scenarios.realistic.keyMetrics || {}).map(([key, value]) => 
+                                      `<li>${key}: ${value}</li>`).join('')}
+                                </ul>
+                                <h5>Ottimizzazioni:</h5>
+                                <ul>
+                                    ${(scenarios.realistic.optimizations || []).map(opt => 
+                                      `<li>${opt}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scenario Ottimistico -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">Scenario Ottimistico</div>
+                            <div class="card-body">
+                                <p><strong>Descrizione:</strong> ${scenarios.optimistic.description}</p>
+                                <h5>Indicatori Chiave:</h5>
+                                <ul>
+                                    ${Object.entries(scenarios.optimistic.keyMetrics || {}).map(([key, value]) => 
+                                      `<li>${key}: ${value}</li>`).join('')}
+                                </ul>
+                                <h5>Ottimizzazioni:</h5>
+                                <ul>
+                                    ${(scenarios.optimistic.optimizations || []).map(opt => 
+                                      `<li>${opt}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        scenariosContent.innerHTML = html;
+    }
+
+    function renderReport(report) {
+        reportContent.innerHTML = '';
+        
+        if (!report) {
+            reportContent.innerHTML = '<p>Nessun report disponibile.</p>';
+            return;
+        }
+        
+        // Salva il report
+        reportData = report;
+        
+        // Crea il contenuto HTML
+        let html = `
+            <div class="report-container">
+                <h3>${report.title}</h3>
+                <p>Data: ${report.date}</p>
+                
+                <div class="card mb-4">
+                    <div class="card-header">Executive Summary</div>
+                    <div class="card-body">
+                        ${report.sections.executive}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">Analisi Finanziaria</div>
+                    <div class="card-body">
+                        <h5>Panoramica</h5>
+                        <div>${report.sections.financial.overview}</div>
+                        
+                        <h5>Punti di Forza</h5>
+                        <div>${report.sections.financial.strengths}</div>
+                        
+                        <h5>Criticità</h5>
+                        <div>${report.sections.financial.weaknesses}</div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">Raccomandazioni</div>
+                    <div class="card-body">
+                        ${report.sections.recommendations}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">Piano di Implementazione</div>
+                    <div class="card-body">
+                        ${report.sections.implementation}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        reportContent.innerHTML = html;
+    }
+
+    // EVENT HANDLERS
     
     // Form submission
     if (indicatorsForm) {
@@ -395,34 +417,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Genera ottimizzazioni
-if (generateOptimizationsBtn) {
-    generateOptimizationsBtn.addEventListener('click', async () => {
-        console.log('Pulsante Genera Ottimizzazioni cliccato');
-        if (!currentSessionId) {
-            console.log('Nessun sessionId trovato!', currentSessionId);
-            alert('Sessione non valida. Ripeti l\'analisi.');
-            return;
-        }
-        
-        showLoading('Generazione ottimizzazioni in corso...');
-        
-        try {
-            console.log('Tentativo di chiamare identifyOptimizations con sessionId:', currentSessionId);
-            const result = await window.superAgenteAPI.identifyOptimizations(currentSessionId);
-            console.log('Risultato ottimizzazioni:', result);
+    if (generateOptimizationsBtn) {
+        generateOptimizationsBtn.addEventListener('click', async () => {
+            console.log('Pulsante Genera Ottimizzazioni cliccato');
+            if (!currentSessionId) {
+                console.error('Sessione non valida, ID:',  currentSessionId);
+                alert('Sessione non valida. Ripeti l\'analisi.');
+                return;
+            }
             
-            renderOptimizations(result.optimizations);
+            showLoading('Generazione ottimizzazioni in corso...');
             
-            enableTab('optimizations');
-            switchTab('optimizations');
-        } catch (error) {
-            console.error('Errore dettagliato:', error);
-            alert(`Errore: ${error.message}`);
-        } finally {
-            hideLoading();
-        }
-    });
-}
+            try {
+                console.log('Chiamata API identifyOptimizations con sessionId:', currentSessionId);
+                const result = await window.superAgenteAPI.identifyOptimizations(currentSessionId);
+                console.log('Risultato ottimizzazioni:', result);
+                
+                renderOptimizations(result.optimizations);
+                
+                // Abilita il tab di ottimizzazioni
+                enableTab('optimizations');
+                
+                // Passa al tab di ottimizzazioni
+                switchTab('optimizations');
+            } catch (error) {
+                console.error('Errore nella generazione delle ottimizzazioni:', error);
+                alert(`Errore: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        });
+    }
     
     // Torna all'analisi
     if (backToAnalysisBtn) {
@@ -434,6 +459,7 @@ if (generateOptimizationsBtn) {
     // Valida ottimizzazioni e genera scenari
     if (validateOptimizationsBtn) {
         validateOptimizationsBtn.addEventListener('click', async () => {
+            console.log('Pulsante Valida e Genera Scenari cliccato');
             if (!currentSessionId || !currentOptimizations || currentOptimizations.length === 0) {
                 alert('Dati insufficienti. Ripeti la procedura.');
                 return;
@@ -451,20 +477,29 @@ if (generateOptimizationsBtn) {
             showLoading('Validazione e generazione scenari in corso...');
             
             try {
+                console.log('Chiamata API updateSelectedOptimizations con sessionId:', currentSessionId);
+                console.log('Ottimizzazioni selezionate:', selectedIds);
+                
                 // Aggiorna le selezioni
                 await window.superAgenteAPI.updateSelectedOptimizations(currentSessionId, selectedIds);
                 
                 // Valida le selezioni
+                console.log('Chiamata API validateSelections');
                 const validation = await window.superAgenteAPI.validateSelections(currentSessionId);
                 validationResult = validation.validationResult;
+                console.log('Risultato validazione:', validationResult);
                 
                 // Genera scenari
+                console.log('Chiamata API generateScenarios');
                 const scenarios = await window.superAgenteAPI.generateScenarios(currentSessionId);
                 console.log('Scenari generati:', scenarios);
                 
                 renderScenarios(scenarios.scenarios);
                 
+                // Abilita il tab di scenari
                 enableTab('scenarios');
+                
+                // Passa al tab di scenari
                 switchTab('scenarios');
             } catch (error) {
                 console.error('Errore nella generazione degli scenari:', error);
@@ -485,6 +520,7 @@ if (generateOptimizationsBtn) {
     // Genera report
     if (generateReportBtn) {
         generateReportBtn.addEventListener('click', async () => {
+            console.log('Pulsante Genera Report cliccato');
             if (!currentSessionId) {
                 alert('Sessione non valida. Ripeti l\'analisi.');
                 return;
@@ -493,12 +529,16 @@ if (generateOptimizationsBtn) {
             showLoading('Generazione report in corso...');
             
             try {
+                console.log('Chiamata API generateReport');
                 const result = await window.superAgenteAPI.generateReport(currentSessionId);
                 console.log('Report generato:', result);
                 
                 renderReport(result.report);
                 
+                // Abilita il tab di report
                 enableTab('report');
+                
+                // Passa al tab di report
                 switchTab('report');
             } catch (error) {
                 console.error('Errore nella generazione del report:', error);
@@ -519,6 +559,7 @@ if (generateOptimizationsBtn) {
     // Esporta report
     if (exportReportBtn) {
         exportReportBtn.addEventListener('click', async () => {
+            console.log('Pulsante Esporta Report cliccato');
             if (!reportData) {
                 alert('Nessun report da esportare. Genera prima il report.');
                 return;
@@ -527,7 +568,7 @@ if (generateOptimizationsBtn) {
             showLoading('Esportazione report in corso...');
             
             try {
-                // Per ora facciamo un semplice export del testo
+                console.log('Chiamata API saveDocumentAs');
                 const result = await window.superAgenteAPI.saveDocumentAs(
                     reportData.fullText, 
                     'SuperAgente_Report.txt'
