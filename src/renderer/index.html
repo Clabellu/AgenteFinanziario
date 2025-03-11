@@ -245,21 +245,60 @@
                 </div>
             </div>
 
-            <!-- Optimizations Tab (aggiungi questo dopo il tab Analysis) -->
-            <div class="tab-pane" id="optimizations-tab">
-                 <h2>Selezione Ottimizzazioni</h2>
-                 <p>Seleziona le ottimizzazioni che ritieni più adatte alla tua situazione:</p>
-    
-                 <div id="optimizations-content">
-                      <p>Caricamento ottimizzazioni in corso...</p>
-             </div>
+            <div id="optimizations-content">
+                <p>Caricamento ottimizzazioni in corso...</p>
+            </div>
+            
+            <template id="optimization-template">
+                <div class="optimization-card">
+                    <div class="d-flex justify-content-between">
+                        <h4 class="optimization-title"></h4>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input optimization-checkbox">
+                        </div>
+                    </div>
+                    <p class="optimization-description"></p>
+                    <div class="optimization-meta">
+                        <span class="badge badge-primary optimization-impact"></span>
+                        <span class="badge optimization-difficulty"></span>
+                        <span class="badge optimization-timeframe"></span>
+                        <span class="badge optimization-category"></span>
+                    </div>
+                </div>
+            </template>
     
     <div class="d-flex justify-content-between mt-4">
         <button type="button" class="btn btn-outline-secondary" id="back-to-analysis-btn">Indietro</button>
         <button type="button" class="btn btn-primary" id="validate-optimizations-btn">Valida e Genera Scenari</button>
     </div>
 </div>
-            
+<div class="tab-pane" id="scenarios-tab">
+    <h2>Scenari Finanziari</h2>
+    <p>Analisi dei potenziali scenari in base alle ottimizzazioni selezionate:</p>
+    
+    <div id="scenarios-content">
+        <p>Caricamento scenari in corso...</p>
+    </div>
+    
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-outline-secondary" id="back-to-optimizations-btn">Indietro</button>
+        <button type="button" class="btn btn-primary" id="generate-report-btn">Genera Report</button>
+    </div>
+</div>
+
+<!-- Report Tab (aggiungi dopo il tab Scenari) -->
+<div class="tab-pane" id="report-tab">
+    <h2>Report Finale</h2>
+    <div id="report-content">
+        <p>Caricamento report in corso...</p>
+    </div>
+    
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-outline-secondary" id="back-to-scenarios-btn">Indietro</button>
+        <button type="button" class="btn btn-primary" id="export-report-btn">Esporta Report</button>
+    </div>
+</div>
+      
             <!-- Altre tab panes... -->
         </div>
     </div>
@@ -455,5 +494,7 @@
             hideLoading();
         });
     </script>
+
+<script src="js/main.js"></script>
 </body>
 </html>

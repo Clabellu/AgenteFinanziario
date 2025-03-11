@@ -278,3 +278,58 @@ footer {
 .badge-primary { background-color: #cce5ff; color: #004085; }
 .badge-warning { background-color: #fff3cd; color: #856404; }
 .badge-danger { background-color: #f8d7da; color: #721c24; }
+.badge-secondary { background-color: #e2e3e5; color: #383d41; }
+
+/* Scenari */
+.scenarios-container {
+    margin-top: 20px;
+}
+
+.col-md-4 {
+    width: calc(33.333% - 20px);
+    float: left;
+    margin-right: 20px;
+}
+
+.col-md-4:last-child {
+    margin-right: 0;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+}
+
+.row::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.bg-primary {
+    background-color: #0066cc !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.text-white {
+    color: white !important;
+}
+
+.mb-4 {
+    margin-bottom: 20px;
+}
+
+/* Report */
+.report-container {
+    margin-top: 20px;
+}
+
+.report-container h5 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #0066cc;
+}

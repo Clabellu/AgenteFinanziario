@@ -7,14 +7,19 @@ const AgentOrchestrator = require('../orchestrator/AgentOrchestrator');
 const sessionOrchestrators = new Map();
 
 function setupIpcHandlers(ipcMain) {
+  console.log('Configurazione degli handler IPC...')
   // Analisi finanziaria
   ipcMain.handle('analyze-financial-health', async (event, indicators) => {
     try {
+      console.log('Handler analyze-financial-health chiamato con:', indicators);
       const sessionId = `session_${Date.now()}`;
+      console.log('Creazione nuova sessione con ID:', sessionId)
       const orchestrator = new AgentOrchestrator();
       sessionOrchestrators.set(sessionId, orchestrator);
+      console.log('Orchestratori attivi:', sessionOrchestrators.size);
       
       const analysis = await orchestrator.analyzeFinancialHealth(indicators);
+      console.log('Analisi completata per sessionId:', sessionId);
       return { sessionId, analysis };
     } catch (error) {
       console.error('Errore nell\'analisi finanziaria:', error);
@@ -25,12 +30,16 @@ function setupIpcHandlers(ipcMain) {
   // Ottimizzazioni
   ipcMain.handle('identify-optimizations', async (event, sessionId) => {
     try {
+      console.log('Richiesta ottimizzazioni per sessionId:', sessionId);
       const orchestrator = sessionOrchestrators.get(sessionId);
       if (!orchestrator) {
+        console.error('Nessun orchestratore trovato per sessionId:', sessionId);
         throw new Error('Sessione non valida o scaduta');
       }
       
+      console.log('Chiamata identifyOptimizations su orchestratore...');
       const optimizations = await orchestrator.identifyOptimizations();
+      console.log('Ottimizzazioni generate:', optimizations.length);
       return { optimizations };
     } catch (error) {
       console.error('Errore nell\'identificazione delle ottimizzazioni:', error);

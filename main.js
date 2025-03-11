@@ -13,7 +13,8 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      devTools: true
     }
   });
 
@@ -22,6 +23,8 @@ function createWindow() {
 
   // Apri DevTools in sviluppo
   mainWindow.webContents.openDevTools();
+
+  console.log('Finestra principale creata, preload configurato su:', path.join(_dirname, 'preload.js'));
 
   // Quando la finestra viene chiusa
   mainWindow.on('closed', function () {
