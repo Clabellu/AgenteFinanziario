@@ -492,15 +492,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Genera scenari
                 console.log('Chiamata API generateScenarios');
                 const scenarios = await window.superAgenteAPI.generateScenarios(currentSessionId);
+                console.log('Struttura scenarios completa', JSON.stringify(scenarios, null,2));
                 console.log('Scenari generati:', scenarios);
                 
-                renderScenarios(scenarios.scenarios);
+                renderScenarios(scenarios);
                 
                 // Abilita il tab di scenari
                 enableTab('scenarios');
                 
                 // Passa al tab di scenari
                 switchTab('scenarios');
+                console.log('Tab attivo', document.querySelector('.tab-pane.active').id)
             } catch (error) {
                 console.error('Errore nella generazione degli scenari:', error);
                 alert(`Errore: ${error.message}`);

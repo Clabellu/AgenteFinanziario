@@ -101,8 +101,8 @@ function setupIpcHandlers(ipcMain) {
       }
       
       const scenarios = await orchestrator.generateScenarios();
-      console.log('Scenari generati');
-      return { scenarios };
+      console.log('Struttura dati scenari:', Object.keys(scenarios));
+      return  scenarios ;
     } catch (error) {
       console.error('Errore nella generazione degli scenari:', error);
       throw new Error(`Errore nella generazione degli scenari: ${error.message}`);
