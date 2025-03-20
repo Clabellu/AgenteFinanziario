@@ -1,0 +1,12 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.tuaazienda.superagentefinanziario
+productName: SuperAgente Finanziario
+win:
+  target: nsis
+  sign: false
+mac:
+  target: dmg
+files: []
+electronVersion: 28.3.3
