@@ -314,6 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         indicatorsForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             console.log('Form sottomesso');
+            console.log('Verifica elementi DOM');
+            console.log('analysisContent:', document.getElementById('analysis-content') ? 'OK' : 'MANCANTE');
+            console.log('analysis-tab:', document.getElementById('analysis-tab') ? 'OK' : 'MANCANTE');
+
             
             // Raccogli i dati del form
             const formData = new FormData(indicatorsForm);
@@ -325,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            console.log('Indicatori raccolti:', indicators);
+            console.log('Indicatori raccolti:', Object.keys(indicators).length);
             
             // Verifica i dati minimi
             if (Object.keys(indicators).length < 2) {
@@ -341,31 +345,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!window.superAgenteAPI) {
                     throw new Error('API SuperAgente non disponibile');
                 }
-
+    
+                console.log('Chiamata API analyze-financial-health con Timeout');
+                
+                // Crea entrambe le promise
                 const analysisPromise = window.superAgenteAPI.analyzeFinancialHealth(indicators);
-
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Timeout: analisi troppo lunga')), 30000);
+                    setTimeout(() => reject(new Error('Timeout: analisi troppo lunga')), 60000);
                 });
                 
-                // Chiama l'API per l'analisi
-                console.log('Chiamata API analyze-financial-health con Timeout');
-                const result = await window.superAgenteAPI.analyzeFinancialHealth(indicators);
-                console.log('Risultato analisi ricevuto:', result);
+                // Usa Promise.race per il timeout
+                const result = await Promise.race([analysisPromise, timeoutPromise]);
+                console.log('Risposta ricevuta dal server:', Object.keys(result));
                 
                 // Salva l'ID sessione
                 currentSessionId = result.sessionId;
+                console.log('ID sessione salvato:', currentSessionId);
                 
-                // Verifica che l'analisi esista e sia valida
-                if (!result.analysis || ! result.analysis.analysis) {
-                    console.error('Analisi non valida', result);
-                    throw new Error('Risultato analisi non valido');
+                // Verifica la presenza dell'analisi
+                if (!result.analysis) {
+                    console.warn('Oggetto analysis non presente nella risposta');
+                    throw new Error('Risposta senza analisi');
                 }
-
-                console.log('Visualizzazione analisi nel DOM');
+                
+                if (!result.analysis.analysis) {
+                    console.warn('Campo analysis.analysis non presente nella risposta');
+                    // Salva comunque i dati parziali
+                    result.analysis.analysis = "Analisi non disponibile o incompleta. Puoi proseguire comunque.";
+                }
+                
+                console.log('Visualizzazione analisi nel DOM, lunghezza:', result.analysis.analysis.length);
+                
+                // Sanitizza la risposta prima di inserirla
+                const sanitizedAnalysis = result.analysis.analysis
+                    .replace(/[^\x20-\x7E\xA0-\xFF\s]/g, '')  // Rimuovi caratteri non standard
+                    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');  // Rimuovi script
+                
                 // Mostra i risultati
                 if (analysisContent) {
-                    analysisContent.innerHTML = `<div class="analysis-result">${result.analysis.analysis}</div>`;
+                    analysisContent.innerHTML = `<div class="analysis-result">${sanitizedAnalysis}</div>`;
                     console.log('Analisi inserita nel DOM');
                 } else {
                     console.error('Elemento analysisContent non trovato');
@@ -376,44 +394,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Passa al tab di analisi
                 switchTab('analysis');
-                console.log('Tab attivo dopo switch:', document.querySelector('.tab-pane.active')?.id)
+                console.log('Tab attivo dopo switch:', document.querySelector('.tab-pane.active')?.id);
             } catch (error) {
                 console.error('Errore durante l\'analisi:', error);
-
+    
                 // Mostra un'analisi predefinita in caso di errore
                 if (analysisContent) {
                     analysisContent.innerHTML = `
                     <div class="analysis-result">
                         <h3>Analisi Finanziaria</h3>
                         <p>Si è verificato un problema nella generazione dell'analisi dettagliata</p>
-
+    
                         <h4>Indicatori principali ricevuti:</h4>
                         <ul>
                         ${Object.entries(indicators).slice(0, 5).map(([key, value]) => 
                             `<li><strong>${key}</strong>: ${value}</li>`).join('')}
-                        <li>... e altri ${Object.keys(indicators).lenght - 5} indicatori</li>
+                        <li>... e altri ${Object.keys(indicators).length - 5} indicatori</li>
                         </ul>
-
+    
                         <p>Puoi procedere comunque alla fase successiva per la generazione delle ottimizzazioni</p>
                     </div>
-                    `,
-                    console.log('Visualizzata analisi predefinita per errore')
-
+                    `;
+                    console.log('Visualizzata analisi predefinita per errore');
                 }
-
-
+    
+                // Crea un ID sessione anche in caso di errore per permettere di proseguire
+                if (!currentSessionId) {
+                    currentSessionId = `session_backup_${Date.now()}`;
+                    console.log('Creato ID sessione di backup:', currentSessionId);
+                }
+    
                 // Passa comunque al tab successivo
                 enableTab('analysis');
                 switchTab('analysis');
-
+    
                 // Mostra un messaggio all'utente 
-                alert(`Si è verificato un problema durante l'analisi:  ${error.message}\nPuoi comunque procedere alla fase successiva`);
+                alert(`Si è verificato un problema durante l'analisi: ${error.message}\nPuoi comunque procedere alla fase successiva`);
             } finally {
                 // Nascondi il loading
                 hideLoading();
                 console.log('Loading nascosto');
             }
         });
+    
     }
     
     // Caricamento dati di esempio

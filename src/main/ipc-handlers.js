@@ -14,7 +14,7 @@ function setupIpcHandlers(ipcMain) {
   // Analisi finanziaria
   ipcMain.handle('analyze-financial-health', async (event, indicators) => {
     try {
-      console.log('Handler analyze-financial-health chiamato con:', indicators);
+      console.log('Handler analyze-financial-health chiamato con indicatori:', Object.keys(indicators).length);
       const sessionId = `session_${Date.now()}`;
       console.log('Creazione nuova sessione con ID:', sessionId);
       
@@ -22,29 +22,61 @@ function setupIpcHandlers(ipcMain) {
       sessionOrchestrators.set(sessionId, orchestrator);
       console.log('Orchestratori attivi:', sessionOrchestrators.size);
       
-      const analysis = await orchestrator.analyzeFinancialHealth(indicators);
-      console.log('Analisi completata: ', analysis ? 'OK' : 'NULL');
-      console.log('Analisi ha un campo "analysis"?', analysis && analysis.analysis ? 'SI' : 'No');
-
-      if (analysis && analysis.analysis && analysis.analysis.lenght > 5000) {
-        const originalAnalysis = analysis.analysis;
-        analysis.analysis = "PARTE_1_DI_3";
-
-        const parts = [
-          originalAnalysis.substring(0,5000),
-          originalAnalysis.substring(5000, 10000),
-          originalAnalysis.substring(10000)
-        ];
-
-        orchestrator.analysisParts = parts
+      try {
+        // Imposta un timeout esplicito per la chiamata analyzeFinancialHealth
+        const analysisPromise = orchestrator.analyzeFinancialHealth(indicators);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout nella chiamata di analisi')), 40000)
+        );
+        
+        const analysis = await Promise.race([analysisPromise, timeoutPromise]);
+        
+        console.log('Analisi completata:', analysis ? 'OK' : 'NULL');
+        console.log('Analisi ha un campo "analysis"?', analysis && analysis.analysis ? 'SI' : 'No');
+        
+        if (analysis && analysis.analysis) {
+          console.log('Lunghezza analisi:', analysis.analysis.length);
+          
+          // Limita la lunghezza dell'analisi se necessario
+          if (analysis.analysis.length > 50000) {
+            console.log('Analisi troppo lunga, troncamento a 50000 caratteri');
+            analysis.analysis = analysis.analysis.substring(0, 50000) + 
+                                "\n\n[Contenuto troncato per motivi di dimensione]";
+          }
+        }
+        
+        return { sessionId, analysis };
+      } catch (innerError) {
+        console.error('Errore nella generazione dell\'analisi:', innerError);
+        
+        // Comunque restituisci un risultato valido con un messaggio di errore
+        return { 
+          sessionId, 
+          analysis: {
+            rawIndicators: indicators,
+            enhancedIndicators: indicators,
+            analysis: `Si è verificato un errore nell'analisi: ${innerError.message}. 
+                      I dati sono stati comunque elaborati e puoi proseguire con le fasi successive.`
+          }
+        };
       }
-
-
-
-      return { sessionId, analysis };
     } catch (error) {
-      console.error('Errore nell\'analisi finanziaria:', error);
-      throw new Error(`Errore nell'analisi: ${error.message}`);
+      console.error('Errore generale nell\'analisi finanziaria:', error);
+      
+      // In caso di errore generale, crea comunque una sessione e un risultato
+      const sessionId = `session_err_${Date.now()}`;
+      const orchestrator = new AgentOrchestrator();
+      sessionOrchestrators.set(sessionId, orchestrator);
+      
+      return { 
+        sessionId, 
+        analysis: {
+          rawIndicators: indicators,
+          enhancedIndicators: indicators,
+          analysis: `Errore durante l'elaborazione dell'analisi: ${error.message}.
+                    I dati sono stati salvati e puoi proseguire con le fasi successive.`
+        }
+      };
     }
   });
 

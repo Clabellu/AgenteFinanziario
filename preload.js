@@ -8,11 +8,33 @@ contextBridge.exposeInMainWorld('superAgenteAPI', {
     console.log('preload: richiesta analyzeFinancialHealth', indicators);
     try {
       const result = await ipcRenderer.invoke('analyze-financial-health', indicators);
-      console.log('preload: risultato analyzeFinancialHealth', result);
+      console.log('preload: risultato analyzeFinancialHealth ricevuto', 
+                  result ? 'OK' : 'NULL', 
+                  result && result.analysis ? 'ha analysis' : 'NO analysis');
+      
+      // Verifica e sanitizza la risposta prima di restituirla
+      if (result && result.analysis && result.analysis.analysis) {
+        console.log('preload: lunghezza analysis', result.analysis.analysis.length);
+      } else {
+        console.warn('preload: risposta incompleta, aggiunta analysis predefinita');
+        if (!result.analysis) {
+          result.analysis = {};
+        }
+        if (!result.analysis.analysis) {
+          result.analysis.analysis = "Analisi non disponibile. I dati sono stati elaborati e puoi continuare.";
+        }
+      }
+      
       return result;
     } catch (error) {
       console.error('preload: errore in analyzeFinancialHealth', error);
-      throw error;
+      // Restituisci un oggetto valido anche in caso di errore
+      return {
+        sessionId: `session_err_${Date.now()}`,
+        analysis: {
+          analysis: `Errore di comunicazione: ${error.message}. Puoi continuare comunque.`
+        }
+      };
     }
   },
   
