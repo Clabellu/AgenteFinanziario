@@ -23,11 +23,45 @@ function setupIpcHandlers(ipcMain) {
       console.log('Orchestratori attivi:', sessionOrchestrators.size);
       
       const analysis = await orchestrator.analyzeFinancialHealth(indicators);
-      console.log('Analisi completata per sessionId:', sessionId);
+      console.log('Analisi completata: ', analysis ? 'OK' : 'NULL');
+      console.log('Analisi ha un campo "analysis"?', analysis && analysis.analysis ? 'SI' : 'No');
+
+      if (analysis && analysis.analysis && analysis.analysis.lenght > 5000) {
+        const originalAnalysis = analysis.analysis;
+        analysis.analysis = "PARTE_1_DI_3";
+
+        const parts = [
+          originalAnalysis.substring(0,5000),
+          originalAnalysis.substring(5000, 10000),
+          originalAnalysis.substring(10000)
+        ];
+
+        orchestrator.analysisParts = parts
+      }
+
+
+
       return { sessionId, analysis };
     } catch (error) {
       console.error('Errore nell\'analisi finanziaria:', error);
       throw new Error(`Errore nell'analisi: ${error.message}`);
+    }
+  });
+
+  ipcMain.handle('get-analysis-part', async (event, { sessionId, partIndex }) => {
+    try {
+      const orchestrator = sessionOrchestrators.get(sessionId);
+      if (!orchestrator || !orchestrator.analysisParts) {
+        throw new Error('Parti dell\'analisi non disponibili');
+      }
+      
+      return { 
+        part: orchestrator.analysisParts[partIndex] || '',
+        totalParts: orchestrator.analysisParts.length
+      };
+    } catch (error) {
+      console.error('Errore nel recupero parte analisi:', error);
+      throw error;
     }
   });
 

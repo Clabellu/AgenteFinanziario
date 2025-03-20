@@ -1,8 +1,12 @@
 {
   "name": "superagente-finanziario",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Analisi finanziaria e generazione di scenari previsionali",
   "main": "main.js",
+  "author": {
+    "name": "Claudio",
+    "email": "bellucci.claudio85@gmail.com"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder"
@@ -14,17 +18,23 @@
       "output": "dist"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "sign": false
     },
     "mac": {
       "target": "dmg"
     }
   },
+
   "dependencies": {
-    
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "openai": "^4.86.2"
   },
   "devDependencies": {
     "electron": "^28.1.0",
-    "electron-builder": "^23.6.0"
+    "electron-builder": "^25.1.8"
   }
+  
 }

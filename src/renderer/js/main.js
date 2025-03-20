@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Ottimizzazioni:</h5>
                                 <ul>
                                     ${(scenarios.realistic.optimizations || []).map(opt => 
-                                      `<li>${opt}</li>`).join('')}
+                                      `<li>${typeof opt === 'object' ? (opt.title || JSON.stringify(opt)) : opt}</li>`).join('')}
                                 </ul>
                             </div>
                         </div>
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Ottimizzazioni:</h5>
                                 <ul>
                                     ${(scenarios.optimistic.optimizations || []).map(opt => 
-                                      `<li>${opt}</li>`).join('')}
+                                      `<li>${typeof opt === 'object' ? (opt.title || JSON.stringify(opt)) : opt}</li>`).join('')}
                                 </ul>
                             </div>
                         </div>
@@ -341,31 +341,77 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!window.superAgenteAPI) {
                     throw new Error('API SuperAgente non disponibile');
                 }
+
+                const analysisPromise = window.superAgenteAPI.analyzeFinancialHealth(indicators);
+
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Timeout: analisi troppo lunga')), 30000);
+                });
                 
                 // Chiama l'API per l'analisi
-                console.log('Chiamata API analyze-financial-health');
+                console.log('Chiamata API analyze-financial-health con Timeout');
                 const result = await window.superAgenteAPI.analyzeFinancialHealth(indicators);
-                console.log('Risultato analisi:', result);
+                console.log('Risultato analisi ricevuto:', result);
                 
                 // Salva l'ID sessione
                 currentSessionId = result.sessionId;
                 
+                // Verifica che l'analisi esista e sia valida
+                if (!result.analysis || ! result.analysis.analysis) {
+                    console.error('Analisi non valida', result);
+                    throw new Error('Risultato analisi non valido');
+                }
+
+                console.log('Visualizzazione analisi nel DOM');
                 // Mostra i risultati
                 if (analysisContent) {
                     analysisContent.innerHTML = `<div class="analysis-result">${result.analysis.analysis}</div>`;
+                    console.log('Analisi inserita nel DOM');
+                } else {
+                    console.error('Elemento analysisContent non trovato');
                 }
-                
+            
                 // Abilita il tab di analisi
                 enableTab('analysis');
                 
                 // Passa al tab di analisi
                 switchTab('analysis');
+                console.log('Tab attivo dopo switch:', document.querySelector('.tab-pane.active')?.id)
             } catch (error) {
                 console.error('Errore durante l\'analisi:', error);
-                alert(`Errore durante l'analisi: ${error.message}`);
+
+                // Mostra un'analisi predefinita in caso di errore
+                if (analysisContent) {
+                    analysisContent.innerHTML = `
+                    <div class="analysis-result">
+                        <h3>Analisi Finanziaria</h3>
+                        <p>Si è verificato un problema nella generazione dell'analisi dettagliata</p>
+
+                        <h4>Indicatori principali ricevuti:</h4>
+                        <ul>
+                        ${Object.entries(indicators).slice(0, 5).map(([key, value]) => 
+                            `<li><strong>${key}</strong>: ${value}</li>`).join('')}
+                        <li>... e altri ${Object.keys(indicators).lenght - 5} indicatori</li>
+                        </ul>
+
+                        <p>Puoi procedere comunque alla fase successiva per la generazione delle ottimizzazioni</p>
+                    </div>
+                    `,
+                    console.log('Visualizzata analisi predefinita per errore')
+
+                }
+
+
+                // Passa comunque al tab successivo
+                enableTab('analysis');
+                switchTab('analysis');
+
+                // Mostra un messaggio all'utente 
+                alert(`Si è verificato un problema durante l'analisi:  ${error.message}\nPuoi comunque procedere alla fase successiva`);
             } finally {
                 // Nascondi il loading
                 hideLoading();
+                console.log('Loading nascosto');
             }
         });
     }
