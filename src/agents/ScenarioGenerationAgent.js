@@ -179,39 +179,80 @@ class ScenarioGenerationAgent {
   }
   
   async _generateScenariosComparison(scenarios, selectedOptimizations) {
+    // Crea una tabella comparativa dettagliata degli indicatori chiave
+    const comparisonsTable = this._createMetricComparisonTable(scenarios);
+    
+    // Prepara informazioni sulle ottimizzazioni selezionate
+    const optimizationsInfo = selectedOptimizations
+      .filter(opt => opt.selected)
+      .map((opt, idx) => 
+        `${idx+1}. ${opt.title} (Impatto: ${opt.impact}, Difficoltà: ${opt.difficulty}, Timeframe: ${opt.timeframe}, Categoria: ${opt.category})
+        Descrizione: ${opt.description}`
+      ).join('\n\n');
+    
     const prompt = `
-    Genera un confronto approfondito tra i seguenti tre scenari finanziari:
+    Conduci un'analisi comparativa approfondita dei seguenti tre scenari finanziari basandoti su dati quantitativi concreti. Evita generalizzazioni o affermazioni non supportate da dati numerici.
+    
+    CONFRONTO NUMERICO DEGLI INDICATORI CHIAVE:
+    ${comparisonsTable}
+    
+    OTTIMIZZAZIONI IMPLEMENTATE NEI MODELLI:
+    ${optimizationsInfo}
+    
+    DETTAGLI DEGLI SCENARI:
     
     SCENARIO PESSIMISTICO:
     ${scenarios.pessimistic.description}
-    ${this._formatKeyMetrics(scenarios.pessimistic.projections)}
+    ${scenarios.pessimistic.analysis ? scenarios.pessimistic.analysis.impact : ""}
     
     SCENARIO REALISTICO:
     ${scenarios.realistic.description}
-    ${this._formatKeyMetrics(scenarios.realistic.projections)}
-    Ottimizzazioni: ${selectedOptimizations.map(opt => opt.title).join(', ')}
+    ${scenarios.realistic.analysis ? scenarios.realistic.analysis.impact : ""}
     
     SCENARIO OTTIMISTICO:
     ${scenarios.optimistic.description}
-    ${this._formatKeyMetrics(scenarios.optimistic.projections)}
-    Ottimizzazioni: ${selectedOptimizations.map(opt => opt.title).join(', ')}
+    ${scenarios.optimistic.analysis ? scenarios.optimistic.analysis.impact : ""}
     
-    Fornisci un'analisi comparativa che includa:
-    1. Confronto dettagliato dell'impatto sugli indicatori finanziari chiave nei tre scenari
-    2. Analisi rischio-rendimento dei tre scenari
-    3. Quali sono i principali fattori che determinano quale scenario si realizzerà
-    4. Raccomandazioni su come massimizzare la probabilità di realizzare lo scenario ottimistico
-    5. Strategie di mitigazione del rischio per evitare lo scenario pessimistico
+    ANALISI RICHIESTA:
     
-    Fornisci un confronto approfondito di almeno 500-600 parole che evidenzi chiaramente le differenze tra i tre scenari
-    e offra indicazioni pratiche su come gestire la pianificazione strategica in base a queste proiezioni.
+    1. Analisi quantitativa delle variazioni percentuali:
+       - Calcola e commenta le variazioni percentuali specifiche tra gli scenari per ciascun indicatore finanziario
+       - Quali indicatori mostrano le variazioni più significative e perché? Fornisci dati numerici a supporto
+       - Come si manifestano queste variazioni in termini di performance finanziaria complessiva? Quantifica l'impatto
+  
+    2. Correlazioni tra ottimizzazioni e risultati numerici:
+       - Quali ottimizzazioni specifiche hanno il maggiore impatto numerico sugli indicatori finanziari?
+       - Quali combinazioni di ottimizzazioni producono effetti sinergici quantificabili?
+       - Quantifica il rapporto costi-benefici delle ottimizzazioni in ciascuno scenario
+  
+    3. Analisi rischio-rendimento dettagliata:
+       - Calcola il rapporto rischio-rendimento per ciascuno scenario utilizzando variazioni di redditività vs. stabilità finanziaria
+       - Identifica soglie numeriche critiche per ciascun indicatore (punti di breakeven o livelli di allarme)
+       - Quali indicatori fungono da leading indicator per prevedere lo scivolamento verso un diverso scenario?
+  
+    4. Analisi di sensitività:
+       - Come variano i risultati finanziari al variare di specifici parametri operativi?
+       - Quanto dovrebbe cambiare ciascun parametro chiave per passare da uno scenario all'altro?
+       - Quali indicatori sono più sensibili all'implementazione delle ottimizzazioni e di quanto?
+  
+    5. Probabilità e fattori determinanti:
+       - Assegna e giustifica una probabilità quantitativa a ciascuno scenario
+       - Quali fattori specifici e misurabili determinano quale scenario si realizzerà?
+       - Qual è il peso relativo di ciascun fattore? Fornisci percentuali approssimative
+  
+    6. Raccomandazioni basate su KPI specifici:
+       - Identifica 5-7 KPI critici da monitorare con valori target e soglie di allarme specifici
+       - Formula raccomandazioni concrete per massimizzare la probabilità dello scenario ottimistico
+       - Definisci un piano di contingenza basato su trigger numerici specifici
+  
+    Il tuo confronto deve essere estremamente analitico e basato sui dati, con frequenti riferimenti a valori numerici, percentuali, rapporti e correlazioni. Evita completamente affermazioni generiche o non supportate da dati quantitativi. Fornisci un'analisi di almeno 800 parole che possa essere utilizzata come base per decisioni finanziarie strategiche.
     `;
     
     try {
       const comparison = await this.aiService.generateCompletion(prompt, {
-        systemPrompt: "Sei un consulente finanziario strategico esperto nell'analisi comparativa di scenari finanziari. Fornisci un'analisi dettagliata, approfondita e fruibile che evidenzi chiaramente le differenze tra gli scenari e offra raccomandazioni pratiche.",
-        temperature: 0.5,
-        maxTokens: 2000
+        systemPrompt: "Sei un analista finanziario quantitativo con specializzazione in modellazione predittiva e analisi di scenari. La tua analisi è rigorosamente basata su dati numerici e modelli statistici. Non fai mai affermazioni qualitative senza supportarle con dati quantitativi. Hai una profonda comprensione delle correlazioni tra indicatori finanziari e sai identificare pattern non ovvi attraverso tecniche analitiche avanzate. Sei estremamente preciso nelle tue valutazioni numeriche e fornisci sempre intervalli di confidenza o margini di errore nelle tue previsioni.",
+        temperature: 0.2, // Abbassato per ottenere risposte più precise e basate sui dati
+        maxTokens: 3500 // Aumentato per consentire analisi più approfondite
       });
       
       return comparison;
@@ -221,44 +262,66 @@ class ScenarioGenerationAgent {
     }
   }
   
-  _formatKeyMetrics(projections) {
+  // Metodo helper per creare una tabella dettagliata di confronto tra gli indicatori nei vari scenari
+  _createMetricComparisonTable(scenarios) {
+    // Definisci gli indicatori chiave da confrontare
     const keyMetrics = [
       'ebitda', 'redditCapitaleInvestito', 'redditCapitaleProprio',
       'liquiditaCorrente', 'indiceCapitalizzazione', 'debitiTotaliEbitda',
-      'capitaleCircolanteNettoOperativo'
+      'leverage', 'capitaleCircolanteNettoOperativo', 'emScore'
     ];
     
-    return keyMetrics
-      .filter(key => projections[key] !== undefined)
-      .map(key => `${key}: ${projections[key]}`)
-      .join(', ');
-  }
-  
-  _formatScenarioForPrompt(scenario) {
-    let text = `Nome: ${scenario.name}\nDescrizione: ${scenario.description}\n`;
+    // Definisci se per ciascun indicatore è meglio un valore più alto o più basso
+    const higherIsBetter = {
+      'ebitda': true,
+      'redditCapitaleInvestito': true,
+      'redditCapitaleProprio': true,
+      'liquiditaCorrente': true,
+      'indiceCapitalizzazione': true,
+      'debitiTotaliEbitda': false, // Per i rapporti di debito, valori più bassi sono migliori
+      'leverage': false, // Per la leva finanziaria, valori più bassi indicano minor rischio
+      'capitaleCircolanteNettoOperativo': true,
+      'margineStruttura': true,
+      'liquiditaSecca': true,
+      'indiceAutofinanziamento': true,
+      'emScore': true
+    };
     
-    if (scenario.optimizations && scenario.optimizations.length > 0) {
-      text += `\nOttimizzazioni implementate:\n`;
-      scenario.optimizations.forEach((opt, idx) => {
-        text += `- ${opt.title} (Impatto: ${opt.impact}, Timeframe: ${opt.timeframe}, Categoria: ${opt.category})\n`;
-      });
-    }
+    // Crea l'intestazione della tabella
+    let table = "| Indicatore | Pessimistico | Realistico | Ottimistico | Var% P vs R | Var% O vs R | Impatto |\n";
+    table += "|------------|--------------|------------|--------------|------------|------------|--------|\n";
     
-    text += `\nProiezioni finanziarie:\n`;
-    const keyIndicators = [
-      'ebitda', 'redditCapitaleInvestito', 'redditCapitaleProprio',
-      'liquiditaCorrente', 'liquiditaSecca', 'indiceCapitalizzazione',
-      'debitiTotaliEbitda', 'leverage', 'capitaleCircolanteNettoOperativo',
-      'margineStruttura', 'indiceAutofinanziamento'
-    ];
-    
-    keyIndicators.forEach(key => {
-      if (scenario.projections[key] !== undefined) {
-        text += `- ${key}: ${scenario.projections[key]}\n`;
+    // Popola la tabella con i dati
+    keyMetrics.forEach(metric => {
+      // Verifica che i dati dell'indicatore esistano nei vari scenari
+      if (scenarios.realistic.projections[metric] !== undefined) {
+        // Estrai i valori per ciascuno scenario
+        const r = scenarios.realistic.projections[metric];
+        const p = scenarios.pessimistic.projections[metric];
+        const o = scenarios.optimistic.projections[metric];
+        
+        // Evita divisioni per zero
+        const rAbs = Math.abs(r) < 0.000001 ? 0.000001 : Math.abs(r);
+        
+        // Calcola le variazioni percentuali
+        const pDiff = ((p - r) / rAbs * 100).toFixed(2);
+        const oDiff = ((o - r) / rAbs * 100).toFixed(2);
+        
+        // Determina se le variazioni sono positive o negative dal punto di vista aziendale
+        const pImpact = ((pDiff > 0) === higherIsBetter[metric]) ? "Positivo" : "Negativo";
+        const oImpact = ((oDiff > 0) === higherIsBetter[metric]) ? "Positivo" : "Negativo";
+        
+        // Formatta i valori numerici per la visualizzazione
+        const pValue = typeof p === 'number' ? p.toFixed(2) : p;
+        const rValue = typeof r === 'number' ? r.toFixed(2) : r;
+        const oValue = typeof o === 'number' ? o.toFixed(2) : o;
+        
+        // Aggiungi la riga alla tabella
+        table += `| ${metric} | ${pValue} | ${rValue} | ${oValue} | ${pDiff}% | ${oDiff}% | P: ${pImpact}, O: ${oImpact} |\n`;
       }
     });
     
-    return text;
+    return table;
   }
   
   _parseScenarioAnalysis(scenarios, analysisText) {
@@ -271,7 +334,7 @@ class ScenarioGenerationAgent {
     // Estrai le sezioni per ciascuno scenario
     const pessimisticAnalysis = this._extractScenarioSection(analysisText, pessimisticPattern, realisticPattern);
     const realisticAnalysis = this._extractScenarioSection(analysisText, realisticPattern, optimisticPattern);
-    const optimisticAnalysis = this._extractScenarioSection(analysisText, optimisticPattern, comparisonPattern);
+    let optimisticAnalysis = this._extractScenarioSection(analysisText, optimisticPattern, comparisonPattern);
     const comparison = this._extractScenarioSection(analysisText, comparisonPattern, null);
 
     // Log di debug per verificare l'estrazione
@@ -308,12 +371,19 @@ _extractAlternativeOptimisticAnalysis(analysisText) {
   return match ? match[0] : "";
 }
   
-  _extractScenarioSection(text, sectionStart, sectionEnd) {
-    const startIdx = text.indexOf(sectionStart);
-    if (startIdx === -1) return 'Analisi non disponibile.';
+  _extractScenarioSection(text, sectionStartPattern, sectionEndPattern) {
+    const startMatch = text.match(sectionStartPattern);
+    if (!startMatch) return 'Analisi non disponibile.';
     
-    const endIdx = sectionEnd ? text.indexOf(sectionEnd) : undefined;
-    return text.substring(startIdx, endIdx !== undefined ? endIdx : undefined).trim();
+    const startIdx = startMatch.index;
+
+    let endIdx; 
+    if (sectionEndPattern) {
+      const endMatch = text.match(sectionEndPattern);
+      endIdx = endMatch ? endMatch.index : undefined;
+    }
+
+    return text.substring(startIdx,endIdx).trim();
   }
   
   _structureScenarioAnalysis(analysisText) {
