@@ -81,11 +81,12 @@ class ReportAgent {
     _formatScenarios(scenarios) {
       // Formatta gli scenari per il report
       return {
-        base: {
-          name: scenarios.base.name,
-          description: scenarios.base.description,
-          keyMetrics: this._extractKeyMetrics(scenarios.base.projections),
-          analysis: scenarios.base.analysis
+        pessimistic: {
+          name: scenarios.pessimistic.name,
+          description: scenarios.pessimistic.description,
+          keyMetrics: this._extractKeyMetrics(scenarios.pessimistic.projections),
+          analysis: scenarios.pessimistic.analysis,
+          optimizations: scenarios.pessimistic.optimizations.map(opt => opt.title)
         },
         realistic: {
           name: scenarios.realistic.name,
@@ -208,7 +209,7 @@ class ReportAgent {
       });
       
       fullText += `## Scenari\n\n`;
-      fullText += `### Scenario Base\n\n${sections.scenarios.base.analysis.fullAnalysis || 'Non disponibile'}\n\n`;
+      fullText += `### Scenario Pessimistico\n\n${sections.scenarios.pessimistic.analysis.fullAnalysis || 'Non disponibile'}\n\n`;
       fullText += `### Scenario Realistico\n\n${sections.scenarios.realistic.analysis.fullAnalysis || 'Non disponibile'}\n\n`;
       fullText += `### Scenario Ottimistico\n\n${sections.scenarios.optimistic.analysis.fullAnalysis || 'Non disponibile'}\n\n`;
       fullText += `### Confronto tra Scenari\n\n${sections.scenarios.comparison}\n\n`;

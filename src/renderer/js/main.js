@@ -184,22 +184,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card mb-4">
                     <div class="card-header">Confronto tra Scenari</div>
                     <div class="card-body">
-                        ${scenarios.comparison || 'Nessun confronto disponibile.'}
+                        ${scenarios.comparison || 'Analisi comparativa in corso...'}
                     </div>
                 </div>
                 
                 <div class="row">
-                    <!-- Scenario Base -->
+                    <!-- Scenario Pessimistico -->
                     <div class="col-md-4">
                         <div class="card">
-                            <div class="card-header">Scenario Base</div>
+                            <div class="card-header">Scenario Pessimistico</div>
                             <div class="card-body">
-                                <p><strong>Descrizione:</strong> ${scenarios.base.description}</p>
+                                <p><strong>Descrizione:</strong> ${scenarios.pessimistic.description}</p>
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
-                                    ${Object.entries(scenarios.base.keyMetrics || {}).map(([key, value]) => 
+                                    ${Object.entries(scenarios.pessimistic.keyMetrics || {}).map(([key, value]) => 
                                       `<li>${key}: ${value}</li>`).join('')}
                                 </ul>
+                                ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.impact ? `
+                                <h5>Impatto:</h5>
+                                <div class="scenario-impact">${scenarios.pessimistic.analysis.impact.substring(0, 150)}...</div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -220,6 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${(scenarios.realistic.optimizations || []).map(opt => 
                                       `<li>${typeof opt === 'object' ? (opt.title || JSON.stringify(opt)) : opt}</li>`).join('')}
                                 </ul>
+                                ${scenarios.realistic.analysis && scenarios.realistic.analysis.impact ? `
+                                <h5>Impatto:</h5>
+                                <div class="scenario-impact">${scenarios.realistic.analysis.impact.substring(0, 150)}...</div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -240,6 +248,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${(scenarios.optimistic.optimizations || []).map(opt => 
                                       `<li>${typeof opt === 'object' ? (opt.title || JSON.stringify(opt)) : opt}</li>`).join('')}
                                 </ul>
+                                ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.impact ? `
+                                <h5>Impatto:</h5>
+                                <div class="scenario-impact">${scenarios.optimistic.analysis.impact.substring(0, 150)}...</div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>

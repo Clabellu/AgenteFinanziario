@@ -9,24 +9,7 @@ class AIService {
     this.defaultModel = config.model || 'gpt-4';
   }
   
-  async generateCompletion(prompt, options = {}) {
-    try {
-      const response = await this.client.chat.completions.create({
-        model: options.model || this.defaultModel,
-        messages: [
-          { role: "system", content: options.systemPrompt || "Sei un esperto analista finanziario." },
-          { role: "user", content: prompt }
-        ],
-        temperature: options.temperature || 0.3,
-        max_tokens: options.maxTokens || 2000
-      });
-      
-      return response.choices[0].message.content;
-    } catch (error) {
-      console.error("Errore nella chiamata OpenAI:", error);
-      throw new Error(`Generazione AI fallita: ${error.message}`);
-    }
-  }
+  
   
   // Per conversazioni multi-turno
   async generateChat(messages, options = {}) {
@@ -73,7 +56,8 @@ class AIService {
               { role: "user", content: prompt }
             ],
             temperature: options.temperature || 0.3,
-            max_tokens: options.maxTokens || 2000
+            max_tokens: options.maxTokens || 3000
+
           });
           
           if (!response.choices || response.choices.length === 0) {
@@ -98,6 +82,10 @@ class AIService {
       throw lastError || new Error("Tutti i tentativi falliti");
     } catch (error) {
       console.error("Errore dettagliato nella chiamata OpenAI:", error);
+
+      if (options.throwOnError) {
+        throw new Error(`Generazione AI fallita: ${error.message}`);
+      }
       
       // Genera una risposta di fallback leggibile ma che indica l'errore
       return `Analisi finanziaria generica basata sui dati forniti:\n\n
