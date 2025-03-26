@@ -300,6 +300,13 @@ class ScenarioGenerationAgent {
      
     return updatedScenarios;
   }
+
+  // Metodo ausiliario per tentare estrazione alternativa
+_extractAlternativeOptimisticAnalysis(analysisText) {
+  // Cerca una sezione che parla di scenario ottimistico in qualsiasi formato
+  const match = analysisText.match(/ottimistico[^]*?(?:CONFRONTO|$)/i);
+  return match ? match[0] : "";
+}
   
   _extractScenarioSection(text, sectionStart, sectionEnd) {
     const startIdx = text.indexOf(sectionStart);
