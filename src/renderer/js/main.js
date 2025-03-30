@@ -201,8 +201,30 @@ document.addEventListener('DOMContentLoaded', () => {
                                       `<li>${key}: ${value}</li>`).join('')}
                                 </ul>
                                 ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.impact ? `
-                                <h5>Impatto:</h5>
-                                <div class="scenario-impact">${scenarios.pessimistic.analysis.impact.substring(0, 150)}...</div>
+                                <h5>Impatto sugli Indicatori:</h5>
+                                <div class="scenario-section">${scenarios.pessimistic.analysis.impact}</div>
+                            ` : ''}
+                            ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.risksAndOpportunities ? `
+                            <h5>Rischi e Opportunità:</h5>
+                            <div class="scenario-section">${scenarios.pessimistic.analysis.risksAndOpportunities}</div>
+                            ` : ''}
+                            <button class="btn btn-outline-secondary mt-2 toggle-details" data-scenario="pessimistic">Mostra più dettagli</button>
+                            <div class="scenario-details hidden" id="pessimistic-details">
+                                ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.successProbability ? `
+                                <h5>Probabilità di Realizzazione:</h5>
+                                <div class="scenario-section">${scenarios.pessimistic.analysis.successProbability}</div>
+                                ` : ''}
+                                ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.recommendations ? `
+                                <h5>Raccomandazioni Strategiche:</h5>
+                                <div class="scenario-section">${scenarios.pessimistic.analysis.recommendations}</div>
+                                ` : ''}
+                                ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.timeline ? `
+                                <h5>Timeline di Implementazione:</h5>
+                                <div class="scenario-section">${scenarios.pessimistic.analysis.timeline}</div>
+                                ` : ''}
+                                ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.scenarioAnalysis ? `
+                                <h5>Analisi di Scenario:</h5>
+                                <div class="scenario-section">${scenarios.pessimistic.analysis.scenarioAnalysis}</div>
                                 ` : ''}
                             </div>
                         </div>
@@ -225,8 +247,30 @@ document.addEventListener('DOMContentLoaded', () => {
                                       `<li>${typeof opt === 'object' ? (opt.title || JSON.stringify(opt)) : opt}</li>`).join('')}
                                 </ul>
                                 ${scenarios.realistic.analysis && scenarios.realistic.analysis.impact ? `
-                                <h5>Impatto:</h5>
-                                <div class="scenario-impact">${scenarios.realistic.analysis.impact.substring(0, 150)}...</div>
+                                <h5>Impatto sugli Indicatori:</h5>
+                                <div class="scenario-section">${scenarios.realistic.analysis.impact}</div>
+                            ` : ''}
+                            ${scenarios.realistic.analysis && scenarios.realistic.analysis.risksAndOpportunities ? `
+                            <h5>Rischi e Opportunità:</h5>
+                            <div class="scenario-section">${scenarios.realistic.analysis.risksAndOpportunities}</div>
+                            ` : ''}
+                            <button class="btn btn-outline-secondary mt-2 toggle-details" data-scenario="realistic">Mostra più dettagli</button>
+                            <div class="scenario-details hidden" id="realistic-details">
+                                ${scenarios.realistic.analysis && scenarios.realistic.analysis.successProbability ? `
+                                <h5>Probabilità di Realizzazione:</h5>
+                                <div class="scenario-section">${scenarios.realistic.analysis.successProbability}</div>
+                                ` : ''}
+                                ${scenarios.realistic.analysis && scenarios.realistic.analysis.recommendations ? `
+                                <h5>Raccomandazioni Strategiche:</h5>
+                                <div class="scenario-section">${scenarios.realistic.analysis.recommendations}</div>
+                                ` : ''}
+                                ${scenarios.realistic.analysis && scenarios.realistic.analysis.timeline ? `
+                                <h5>Timeline di Implementazione:</h5>
+                                <div class="scenario-section">${scenarios.realistic.analysis.timeline}</div>
+                                ` : ''}
+                                ${scenarios.realistic.analysis && scenarios.realistic.analysis.scenarioAnalysis ? `
+                                <h5>Analisi di Scenario:</h5>
+                                <div class="scenario-section">${scenarios.realistic.analysis.scenarioAnalysis}</div>
                                 ` : ''}
                             </div>
                         </div>
@@ -249,8 +293,30 @@ document.addEventListener('DOMContentLoaded', () => {
                                       `<li>${typeof opt === 'object' ? (opt.title || JSON.stringify(opt)) : opt}</li>`).join('')}
                                 </ul>
                                 ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.impact ? `
-                                <h5>Impatto:</h5>
-                                <div class="scenario-impact">${scenarios.optimistic.analysis.impact.substring(0, 150)}...</div>
+                                <h5>Impatto sugli Indicatori:</h5>
+                                <div class="scenario-section">${scenarios.optimistic.analysis.impact}</div>
+                            ` : ''}
+                            ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.risksAndOpportunities ? `
+                            <h5>Rischi e Opportunità:</h5>
+                            <div class="scenario-section">${scenarios.optimistic.analysis.risksAndOpportunities}</div>
+                            ` : ''}
+                            <button class="btn btn-outline-secondary mt-2 toggle-details" data-scenario="optimistic">Mostra più dettagli</button>
+                            <div class="scenario-details hidden" id="optimistic-details">
+                                ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.successProbability ? `
+                                <h5>Probabilità di Realizzazione:</h5>
+                                <div class="scenario-section">${scenarios.optimistic.analysis.successProbability}</div>
+                                ` : ''}
+                                ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.recommendations ? `
+                                <h5>Raccomandazioni Strategiche:</h5>
+                                <div class="scenario-section">${scenarios.optimistic.analysis.recommendations}</div>
+                                ` : ''}
+                                ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.timeline ? `
+                                <h5>Timeline di Implementazione:</h5>
+                                <div class="scenario-section">${scenarios.optimistic.analysis.timeline}</div>
+                                ` : ''}
+                                ${scenarios.optimistic.analysis && scenarios.optimistic.analysis.scenarioAnalysis ? `
+                                <h5>Analisi di Scenario:</h5>
+                                <div class="scenario-section">${scenarios.optimistic.analysis.scenarioAnalysis}</div>
                                 ` : ''}
                             </div>
                         </div>

@@ -5,6 +5,22 @@ class ScenarioGenerationAgent {
     this.aiService = aiService;
     this.calculationService = calculationService;
   }
+
+  // Aggiungi questo metodo alla classe ScenarioGenerationAgent
+_formatScenarioForPrompt(scenario) {
+  // Formattazione delle proiezioni in modo leggibile
+  const formattedProjections = Object.entries(scenario.projections)
+    .map(([key, value]) => `${key}: ${typeof value === 'number' ? value.toFixed(2) : value}`)
+    .join('\n');
+  
+  return `
+Nome: ${scenario.name}
+Descrizione: ${scenario.description}
+Proiezioni:
+${formattedProjections}
+Ottimizzazioni: ${scenario.optimizations.length} ottimizzazioni considerate
+  `;
+}
   
   async generateScenarios(financialAnalysis, validatedOptimizations) {
     // Crea scenario pessimistico (senza ottimizzazioni, con peggioramento)
@@ -139,34 +155,60 @@ class ScenarioGenerationAgent {
       `${idx+1}. ${opt.title} (Impatto: ${opt.impact}, Timeframe: ${opt.timeframe}, Categoria: ${opt.category})\n${opt.description}`
     ).join('\n\n')}
     
-    Per ciascuno scenario, fornisci:
-    1. Una valutazione dettagliata dell'impatto sugli indicatori chiave (liquidità, redditività, struttura, indebitamento)
-    2. I principali rischi e opportunità specifici di questo scenario
-    3. Una stima della probabilità di successo e fattori che potrebbero influenzarla
-    4. Raccomandazioni strategiche su come gestire e massimizzare i benefici in questo scenario
-    5. Una timeline ottimale per l'implementazione delle azioni in questo scenario
-    
-    Fornisci un'analisi approfondita e dettagliata per CIASCUNO dei tre scenari, con almeno 300-400 parole per ogni scenario.
-    Sii specifico riguardo agli impatti sugli indicatori finanziari chiave in ciascuno scenario.
-    
-    Formatta la risposta in modo strutturato, utilizzando per ogni scenario le cinque sezioni sopra indicate.
+    Per ciascuno scenario, fornisci un'analisi ESTREMAMENTE DETTAGLIATA che includa:
+  
+    1. IMPATTO SUGLI INDICATORI:
+     - Analisi dettagliata dell'impatto su ciascun indicatore chiave (liquidità, redditività, struttura, indebitamento)
+     - Confronto quantitativo tra i valori attuali e quelli proiettati
+     - Spiegazione approfondita dei meccanismi che porteranno a tali cambiamenti
+  
+    2. ANALISI RISCHI E OPPORTUNITÀ:
+     - Lista completa dei rischi specifici legati a questo scenario e relative strategie di mitigazione
+     - Identificazione di opportunità emergenti e come sfruttarle efficacemente
+     - Analisi di sensibilità: come piccoli cambiamenti nei fattori chiave possono alterare i risultati
+  
+    3. VALUTAZIONE DELLA PROBABILITÀ:
+     - Stima numerica della probabilità di realizzazione (percentuale)
+     - Identificazione precisa dei principali fattori interni ed esterni che influenzano la probabilità
+     - Analisi delle interdipendenze tra i diversi fattori
+  
+    4. RACCOMANDAZIONI STRATEGICHE:
+     - Piano d'azione dettagliato con iniziative specifiche associate a ciascuna ottimizzazione
+     - Prioritizzazione degli interventi con giustificazione analitica
+     - KPI specifici da monitorare per valutare il successo di ciascuna iniziativa
+  
+    5. TIMELINE E FASI IMPLEMENTATIVE:
+     - Sequenza temporale dettagliata mese per mese
+     - Milestone specifiche con criteri di misurazione
+     - Piano di gestione del cambiamento e coinvolgimento delle risorse
+  
+    6. ANALISI DI SCENARIO:
+     - Come i cambiamenti macroeconomici influenzeranno questo scenario
+     - Impatto potenziale sul posizionamento competitivo dell'azienda
+     - Allineamento con gli obiettivi strategici di lungo periodo
+  
+    Fornisci un'analisi ESTREMAMENTE approfondita e dettagliata per CIASCUNO dei tre scenari, con almeno 500-700 parole per ogni scenario.
+    Sii specifico, quantitativo e pratico, evitando generalizzazioni.
+  
+    Formatta la risposta in modo strutturato, utilizzando per ogni scenario le sei sezioni sopra indicate.
     Usa il formato:
-    
+   
     ANALISI SCENARIO PESSIMISTICO:
-    1. Valutazione impatto: [analisi]
-    2. Rischi e opportunità: [analisi]
-    3. Probabilità di successo: [analisi]
-    4. Raccomandazioni: [analisi]
-    5. Timeline: [analisi]
-    
+    1. Impatto sugli indicatori: [analisi dettagliata]
+    2. Rischi e opportunità: [analisi dettagliata]
+    3. Valutazione probabilità: [analisi dettagliata]
+    4. Raccomandazioni strategiche: [analisi dettagliata]
+    5. Timeline e fasi: [analisi dettagliata]
+    6. Analisi di scenario: [analisi dettagliata]
+  
     E così via per gli altri scenari.
     `;
     
     try {
       const analysis = await this.aiService.generateCompletion(prompt, {
         systemPrompt: "Sei un esperto in pianificazione finanziaria strategica e modellazione di scenari. Analizza gli scenari con approccio analitico e formula raccomandazioni concrete e dettagliate. Fornisci analisi approfondite e complete senza riassumere eccessivamente.",
-        temperature: 0.5,
-        maxTokens: 3500
+        temperature: 0.4,
+        maxTokens: 4000
       });
       
       // Analizza e struttura la risposta
@@ -388,20 +430,21 @@ _extractAlternativeOptimisticAnalysis(analysisText) {
   
   _structureScenarioAnalysis(analysisText) {
     // Estrai informazioni strutturate dall'analisi testuale
-    const impactMatch = analysisText.match(/1\.\s*Valutazione\s*[^:]*:([^]*?)(?:2\.|$)/i);
+    const impactMatch = analysisText.match(/1\.\s*Impatto\s*[^:]*:([^]*?)(?:2\.|$)/i);
     const risksMatch = analysisText.match(/2\.\s*Rischi\s*[^:]*:([^]*?)(?:3\.|$)/i);
-    const successMatch = analysisText.match(/3\.\s*Probabilità\s*[^:]*:([^]*?)(?:4\.|$)/i);
+    const probabilityMatch = analysisText.match(/3\.\s*Valutazione\s*[^:]*:([^]*?)(?:4\.|$)/i);
     const recommendationsMatch = analysisText.match(/4\.\s*Raccomandaz[^:]*:([^]*?)(?:5\.|$)/i);
     const timelineMatch = analysisText.match(/5\.\s*Timeline[^:]*:([^]*?)(?:$)/i);
-    const fullAnalysisMatch = analysisText.match(/ANALISI COMPLETA([^]*?)$/i);
+    const scenarioAnalysisMatch = analysisText.match(/6\.\s*Analisi\s*di\s*scenario[^:]*:([^]*?)(?:$)/i);
     
     return {
       impact: impactMatch ? impactMatch[1].trim() : 'Valutazione impatto non disponibile.',
       risksAndOpportunities: risksMatch ? risksMatch[1].trim() : 'Rischi e opportunità non disponibili.',
-      successProbability: successMatch ? successMatch[1].trim() : 'Probabilità di successo non disponibile.',
+      successProbability: probabilityMatch ? probabilityMatch[1].trim() : 'Probabilità di successo non disponibile.',
       recommendations: recommendationsMatch ? recommendationsMatch[1].trim() : 'Raccomandazioni non disponibili.',
       timeline: timelineMatch ? timelineMatch[1].trim() : 'Timeline non disponibile.',
-      fullAnalysis: fullAnalysisMatch ? fullAnalysisMatch[1].trim() : analysisText
+      scenarioAnalysis: scenarioAnalysisMatch ? scenarioAnalysisMatch[1].trim(): ' Analisi di scenario non disponibile',
+      fullAnalysis: analysisText
     };
   }
   
