@@ -21,6 +21,26 @@ ${formattedProjections}
 Ottimizzazioni: ${scenario.optimizations.length} ottimizzazioni considerate
   `;
 }
+
+_extractKeyMetrics(projections) {
+  // Estrai le metriche chiave dai dati delle proiezioni
+  const keyMetricNames = [
+    'ebitda', 'redditCapitaleInvestito', 'redditCapitaleProprio',
+    'liquiditaCorrente', 'indiceCapitalizzazione', 'debitiTotaliEbitda'
+  ];
+  
+  console.log("Cercando le chiavi:", keyMetricNames);
+  console.log("Tra le proprietà:", Object.keys(projections));
+  
+  // Verifica quali chiavi sono presenti
+  const foundKeys = Object.keys(projections).filter(key => keyMetricNames.includes(key));
+  console.log("Chiavi trovate:", foundKeys);
+  
+  return Object.fromEntries(
+    Object.entries(projections)
+      .filter(([key]) => keyMetricNames.includes(key))
+  );
+}
   
   async generateScenarios(financialAnalysis, validatedOptimizations) {
     // Crea scenario pessimistico (senza ottimizzazioni, con peggioramento)
@@ -56,6 +76,12 @@ Ottimizzazioni: ${scenario.optimizations.length} ottimizzazioni considerate
       realistic: realisticScenario,
       optimistic: optimisticScenario
     };
+
+    // AGGIUNGI QUESTO CODICE: Estrai i key metrics dalle proiezioni e aggiungili agli oggetti scenario
+    scenarios.pessimistic.keyMetrics = this._extractKeyMetrics(pessimisticScenario.projections);
+    console.log("KeyMetrics estratti per pessimistic:", scenarios.pessimistic.keyMetrics);
+    scenarios.realistic.keyMetrics = this._extractKeyMetrics(realisticScenario.projections);
+    scenarios.optimistic.keyMetrics = this._extractKeyMetrics(optimisticScenario.projections);
     
     // Arricchisci gli scenari con l'analisi AI
     const enrichedScenarios = await this._enrichScenariosWithAI(scenarios, financialAnalysis, selectedOptimizations);

@@ -158,12 +158,50 @@ document.addEventListener('DOMContentLoaded', () => {
             timeframe.classList.add(opt.timeframe === 'Breve' ? 'badge-success' : 
                                    opt.timeframe === 'Medio' ? 'badge-primary' : 'badge-secondary');
             
-            // Categoria
-            category.textContent = `Categoria: ${opt.category}`;
+            // Formatta la categoria in modo più leggibile
+            const formattedCategory = opt.category.charAt(0).toUpperCase() + opt.category.slice(1);
+            category.textContent = `${formattedCategory}`;
+            category.classList.add('badge-info');
             
             // Aggiungi la card
             optimizationsContent.appendChild(template);
         });
+
+        //Aggiungi gestore eventi per i checkbox
+        const checkboxes = document.querySelectorAll('.optimization-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Aggiorna visivamente la card quando cambia lo stato del checkbox
+                const card = this.closest('.optimization-card');
+                if (this.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        });
+    }
+
+    // Funzione di utilità per formattare i nomi degli indicatori
+    function _formatMetricName(metricKey) {
+        const metricNames = {
+            'ebitda': 'EBITDA',
+            'redditCapitaleInvestito': 'Redditività Capitale Investito',
+            'redditCapitaleProprio': 'Redditività Capitale Proprio',
+            'liquiditaCorrente': 'Liquidità Corrente',
+            'liquiditaSecca': 'Liquidità Secca',
+            'indiceCapitalizzazione': 'Indice di Capitalizzazione',
+            'debitiTotaliEbitda': 'Debiti Totali/EBITDA',
+            'leverage': 'Leverage',
+            'capitaleCircolanteNettoOperativo': 'Capitale Circolante Netto Op.',
+            'margineStruttura': 'Margine di Struttura',
+            'indiceAutofinanziamento': 'Indice di Autofinanziamento',
+            'emScore': 'EM Score',
+            'pfnPn': 'PFN/PN',
+            'posizioneFinanziariaNetta': 'Posizione Finanziaria Netta'
+        };
+        
+        return metricNames[metricKey] || metricKey;
     }
 
     function renderScenarios(scenarios) {
@@ -198,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
                                     ${Object.entries(scenarios.pessimistic.keyMetrics || {}).map(([key, value]) => 
-                                      `<li>${key}: ${value}</li>`).join('')}
+                                    `<li><strong>${this._formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
                                 </ul>
                                 ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.impact ? `
                                 <h5>Impatto sugli Indicatori:</h5>
@@ -239,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
                                     ${Object.entries(scenarios.realistic.keyMetrics || {}).map(([key, value]) => 
-                                      `<li>${key}: ${value}</li>`).join('')}
+                                    `<li><strong>${this._formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
                                 </ul>
                                 <h5>Ottimizzazioni:</h5>
                                 <ul>
@@ -285,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
                                     ${Object.entries(scenarios.optimistic.keyMetrics || {}).map(([key, value]) => 
-                                      `<li>${key}: ${value}</li>`).join('')}
+                                    `<li><strong>${this._formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
                                 </ul>
                                 <h5>Ottimizzazioni:</h5>
                                 <ul>
@@ -665,6 +703,24 @@ document.addEventListener('DOMContentLoaded', () => {
             switchTab('optimizations');
         });
     }
+
+    // Gestione dei pulsanti "Mostra più dettagli" per gli scenari
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('toggle-details')) {
+            const scenario = event.target.dataset.scenario;
+            const detailsElement = document.getElementById(`${scenario}-details`);
+            
+            if (detailsElement) {
+                if (detailsElement.classList.contains('hidden')) {
+                    detailsElement.classList.remove('hidden');
+                    event.target.textContent = 'Nascondi dettagli';
+                } else {
+                    detailsElement.classList.add('hidden');
+                    event.target.textContent = 'Mostra più dettagli';
+                }
+            }
+        }
+    });
     
     // Genera report
     if (generateReportBtn) {
