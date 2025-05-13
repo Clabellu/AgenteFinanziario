@@ -182,27 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Funzione di utilità per formattare i nomi degli indicatori
-    function _formatMetricName(metricKey) {
-        const metricNames = {
-            'ebitda': 'EBITDA',
-            'redditCapitaleInvestito': 'Redditività Capitale Investito',
-            'redditCapitaleProprio': 'Redditività Capitale Proprio',
-            'liquiditaCorrente': 'Liquidità Corrente',
-            'liquiditaSecca': 'Liquidità Secca',
-            'indiceCapitalizzazione': 'Indice di Capitalizzazione',
-            'debitiTotaliEbitda': 'Debiti Totali/EBITDA',
-            'leverage': 'Leverage',
-            'capitaleCircolanteNettoOperativo': 'Capitale Circolante Netto Op.',
-            'margineStruttura': 'Margine di Struttura',
-            'indiceAutofinanziamento': 'Indice di Autofinanziamento',
-            'emScore': 'EM Score',
-            'pfnPn': 'PFN/PN',
-            'posizioneFinanziariaNetta': 'Posizione Finanziaria Netta'
-        };
-        
-        return metricNames[metricKey] || metricKey;
-    }
+    
 
     function renderScenarios(scenarios) {
         scenariosContent.innerHTML = '';
@@ -214,6 +194,27 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Salva gli scenari
         scenariosData = scenarios;
+
+        function formatMetricName(metricKey) {
+            const metricNames = {
+                'ebitda': 'EBITDA',
+                'redditCapitaleInvestito': 'Redditività Capitale Investito',
+                'redditCapitaleProprio': 'Redditività Capitale Proprio',
+                'liquiditaCorrente': 'Liquidità Corrente',
+                'liquiditaSecca': 'Liquidità Secca',
+                'indiceCapitalizzazione': 'Indice di Capitalizzazione',
+                'debitiTotaliEbitda': 'Debiti Totali/EBITDA',
+                'leverage': 'Leverage',
+                'capitaleCircolanteNettoOperativo': 'Capitale Circolante Netto Op.',
+                'margineStruttura': 'Margine di Struttura',
+                'indiceAutofinanziamento': 'Indice di Autofinanziamento',
+                'emScore': 'EM Score',
+                'pfnPn': 'PFN/PN',
+                'posizioneFinanziariaNetta': 'Posizione Finanziaria Netta'
+            };
+            
+            return metricNames[metricKey] || metricKey;
+        }
         
         // Crea il contenuto HTML
         let html = `
@@ -236,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
                                     ${Object.entries(scenarios.pessimistic.keyMetrics || {}).map(([key, value]) => 
-                                    `<li><strong>${this._formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
+                                    `<li><strong>${formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
                                 </ul>
                                 ${scenarios.pessimistic.analysis && scenarios.pessimistic.analysis.impact ? `
                                 <h5>Impatto sugli Indicatori:</h5>
@@ -277,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
                                     ${Object.entries(scenarios.realistic.keyMetrics || {}).map(([key, value]) => 
-                                    `<li><strong>${this._formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
+                                    `<li><strong>${formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
                                 </ul>
                                 <h5>Ottimizzazioni:</h5>
                                 <ul>
@@ -323,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <h5>Indicatori Chiave:</h5>
                                 <ul>
                                     ${Object.entries(scenarios.optimistic.keyMetrics || {}).map(([key, value]) => 
-                                    `<li><strong>${this._formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
+                                    `<li><strong>${formatMetricName(key)}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`).join('')}
                                 </ul>
                                 <h5>Ottimizzazioni:</h5>
                                 <ul>
@@ -791,5 +792,168 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideLoading();
             }
         });
+    }
+
+    // Variabili per la gestione delle conversazioni
+    let currentConversationId = null;
+
+    // Elementi DOM per la chat
+    const reportChatInput = document.getElementById('report-chat-input');
+    const reportChatSend = document.getElementById('report-chat-send');
+    const reportChatMessages = document.getElementById('report-chat-messages');
+
+    // Funzione per aggiungere un messaggio alla chat
+    function addChatMessage(message, isUser = false) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('chat-message');
+      messageElement.classList.add(isUser ? 'user' : 'agent');
+  
+      // Aggiungi il testo del messaggio
+      messageElement.textContent = message;
+  
+      // Aggiungi la data/ora
+      const timeElement = document.createElement('div');
+      timeElement.classList.add('chat-message-time');
+      const now = new Date();
+      timeElement.textContent = now.toLocaleTimeString();
+      messageElement.appendChild(timeElement);
+  
+      // Aggiungi il messaggio alla chat
+      reportChatMessages.appendChild(messageElement);
+  
+      // Scorri automaticamente verso il basso
+      reportChatMessages.scrollTop = reportChatMessages.scrollHeight;
+    }
+
+    // Inizializza la conversazione quando si visualizza il report
+    async function initializeReportChat() {
+      if (currentConversationId) {
+        console.log('Conversazione già inizializzata:', currentConversationId);
+        return;
+      }
+  
+      if (!reportData) {
+        console.warn('Dati del report non disponibili');
+        return;
+      } 
+  
+      try {
+        console.log('Inizializzazione conversazione sul report');
+        showLoading('Inizializzazione assistente...');
+    
+        // Prepara i dati completi per l'inizializzazione
+        const fullContext = {
+           sessionId: currentSessionId,
+           financialAnalysis: financialAnalysis,
+           optimizations: currentOptimizations,
+           scenarios: scenariosData,
+           report: reportData
+        };
+    
+        // Inizializza la conversazione
+        const result = await window.superAgenteAPI.initReportConversation(fullContext);
+        currentConversationId = result.conversationId;
+    
+        console.log('Conversazione inizializzata:', currentConversationId);
+    
+        // Aggiungi un messaggio di benvenuto
+        addChatMessage('Ciao! Sono il tuo assistente finanziario. Puoi farmi domande specifiche sul report e sull\'analisi finanziaria.', false);
+      } catch (error) {
+        console.error('Errore nell\'inizializzazione della chat:', error);
+        addChatMessage('Mi dispiace, non è stato possibile inizializzare l\'assistente. Riprova più tardi.', false);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Gestione dell'invio di una domanda
+    async function sendReportQuestion() {
+      if (!currentConversationId) {
+        console.warn('Conversazione non inizializzata');
+        return;
+      }
+  
+      const question = reportChatInput.value.trim();
+      if (!question) return;
+  
+      // Mostra la domanda dell'utente
+      addChatMessage(question, true);
+  
+      // Pulisci l'input
+      reportChatInput.value = '';
+  
+      showLoading('Elaborazione risposta...');
+  
+      try {
+        // Invia la domanda
+        const result = await window.superAgenteAPI.sendReportQuestion(currentConversationId, question);
+    
+        // Mostra la risposta
+        addChatMessage(result.answer, false);
+      } catch (error) {
+        console.error('Errore nell\'invio della domanda:', error);
+        addChatMessage('Mi dispiace, si è verificato un errore nell\'elaborazione della tua domanda. Riprova più tardi.', false);
+      } finally {
+        hideLoading();
+      }
+        }
+
+    // Event listener per il pulsante di invio
+    if (reportChatSend) {
+      reportChatSend.addEventListener('click', sendReportQuestion);
+    }
+
+    // Event listener per l'input (invio tramite tasto Enter)
+    if (reportChatInput) {
+      reportChatInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          sendReportQuestion();
+        }
+      });
+    }
+
+    // Event listener per il cambio di tab
+    document.addEventListener('click', (event) => {
+  if (event.target.classList.contains('progress-steps') || event.target.parentElement?.classList.contains('progress-steps')) {
+    const clickedStep = event.target.closest('li');
+    if (clickedStep && clickedStep.dataset.tab === 'report' && reportData && !currentConversationId) {
+      // Inizializza la chat quando si passa al tab report
+      setTimeout(() => {
+        initializeReportChat();
+      }, 500); // Piccolo delay per assicurarsi che il tab sia caricato
+    }
+  }
+    });
+
+    // Aggiungi l'inizializzazione della chat quando viene generato il report
+    if (generateReportBtn) {
+      const originalClickHandler = generateReportBtn.onclick;
+      generateReportBtn.onclick = async function(event) {
+        // Chiama il gestore originale
+        if (originalClickHandler) {
+          await originalClickHandler.call(this, event);
+        }
+    
+        // Inizializza la chat dopo la generazione del report
+        setTimeout(() => {
+          initializeReportChat();
+        }, 1000); // Delay per assicurarsi che il report sia completamente caricato
+      };
+    }
+
+    // Anche quando si esporta il report, assicuriamoci che la chat sia inizializzata
+    if (exportReportBtn) {
+      const originalExportHandler = exportReportBtn.onclick;
+      exportReportBtn.onclick = async function(event) {
+        // Chiama il gestore originale
+        if (originalExportHandler) {
+          await originalExportHandler.call(this, event);
+        }
+    
+        // Inizializza la chat se non è già inizializzata
+        if (!currentConversationId && reportData) {
+          initializeReportChat();
+        }
+      };
     }
 });

@@ -286,8 +286,98 @@ function setupIpcHandlers(ipcMain) {
     }
   });
   
+  
+
+
+  // Inizializzazione della conversazione sul report
+  ipcMain.handle('init-report-conversation', async (event, reportData) => {
+    try {
+      console.log('Richiesta init-report-conversation');
+    
+      // Recupera l'ID della sessione corrente dal report
+      const sessionId = reportData.sessionId;
+      const orchestrator = sessionOrchestrators.get(sessionId);
+    
+      if (!orchestrator) {
+        throw new Error('Sessione non valida o scaduta');
+      }
+    
+      // Recupera il servizio AI dall'orchestratore
+      const aiService = orchestrator.aiService;
+    
+      // Inizializza la conversazione
+      const conversationId = await aiService.initReportConversation(reportData);
+    
+      console.log('Conversazione report inizializzata con ID:', conversationId);
+      return { success: true, conversationId };
+    } catch (error) {
+      console.error('Errore nell\'inizializzazione della conversazione:', error);
+      throw new Error(`Errore nell'inizializzazione della conversazione: ${error.message}`);
+    }
+  });
+
+  // Invio di una domanda alla conversazione
+  ipcMain.handle('send-report-question', async (event, conversationId, question) => {
+    try {
+      console.log('Richiesta send-report-question per conversazione:', conversationId);
+    
+      // Per trovare l'orchestratore giusto, dobbiamo cercare in tutti quelli disponibili
+      let aiService = null;
+      for (const [sessionId, orchestrator] of sessionOrchestrators.entries()) {
+        if (orchestrator.aiService && orchestrator.aiService.conversations && 
+            orchestrator.aiService.conversations.has(conversationId)) {
+          aiService = orchestrator.aiService;
+          break;
+        }
+      }
+    
+      if (!aiService) {
+        throw new Error('Servizio AI non trovato per la conversazione specificata');
+      } 
+    
+      // Invia la domanda
+      const answer = await aiService.sendReportQuestion(conversationId, question);
+    
+      console.log('Risposta ottenuta:', answer.substring(0, 50) + '...');
+      return { success: true, answer };
+    } catch (error) {
+      console.error('Errore nell\'invio della domanda:', error);
+      throw new Error(`Errore nell'invio della domanda: ${error.message}`);
+    }
+  });
+
+  // Eliminazione di una conversazione
+  ipcMain.handle('delete-report-conversation', async (event, conversationId) => {
+    try {
+      console.log('Richiesta delete-report-conversation per conversazione:', conversationId);
+    
+      // Cerca il servizio AI in tutti gli orchestratori
+      let success = false;
+      for (const [sessionId, orchestrator] of sessionOrchestrators.entries()) {
+        if (orchestrator.aiService && orchestrator.aiService.conversations &&
+            orchestrator.aiService.conversations.has(conversationId)) {
+          success = orchestrator.aiService.deleteConversation(conversationId);
+          break;
+        }
+      }
+    
+      if (!success) {
+        throw new Error('Conversazione non trovata');
+      }
+    
+      console.log('Conversazione eliminata con successo');
+      return { success: true };
+    } catch (error) {
+      console.error('Errore nell\'eliminazione della conversazione:', error);
+      throw new Error(`Errore nell'eliminazione della conversazione: ${error.message}`);
+    }
+  });
+
   console.log('Configurazione degli handler IPC completata');
+
 }
+
+
 
 
 

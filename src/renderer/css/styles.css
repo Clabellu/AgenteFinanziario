@@ -399,3 +399,55 @@ footer {
 .hidden{
     display: none !important;
 }
+
+/* Stili per la chat del report */
+.report-chat-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #f9f9f9;
+}
+
+.chat-message {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.chat-message.user {
+  background-color: #e3f2fd;
+  margin-left: auto;
+  border: 1px solid #cce5ff;
+  text-align: right;
+}
+
+.chat-message.agent {
+  background-color: white;
+  margin-right: auto;
+  border: 1px solid #e0e0e0;
+}
+
+.chat-input-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-wrapper input {
+  flex: 1;
+}
+
+.chat-message-time {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 5px;
+}

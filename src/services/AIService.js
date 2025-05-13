@@ -7,10 +7,108 @@ class AIService {
       apiKey: config.apiKey,
     });
     this.defaultModel = config.model || 'gpt-4';
+    this.conversation = new Map();
   }
   
-  
-  
+  /**
+   * Inizializza una nuova conversazione con il contesto del report
+   * @param {Object}   
+   * @returns {string}
+   */
+  async initReoportConversation(reportData) {
+    try {
+      // Genera un ID univoco per la conversazione
+      const conversationId = `conv_${Date.now()}`;
+
+      // Crea un messaggio di sistema con il contesto completo
+      const systemMessage = {
+        role: "system", 
+        content: `Sei un assistente finanziario esperto che risponde a domande basate sul seguente report finanziario.
+        il report contiene analisi finanziaria, ottimizzazioni suggerite, scenari e raccomandazioni.
+        Tutte le sezioni sono interdipendenti. Considera sempre il contesto completo nelle tue risposte.
+
+        REPORT COMPLETO:
+        ${JSON.stringify(reportData, null, 2)}
+
+        Rispondi alle domande dell'utente in modo chiaro basandoti sulle informazioni contenute nel report.`
+      };
+
+      // Memorizza la conversazione
+      this.conversation.set(conversationId, {
+        messages: [systemMessage],
+        reportData: reportData,
+      });
+
+      console.log(`Inizializzata nuova conversazione: ${conversationId}`);
+      return conversationId;
+    } catch (error) {
+      console.error("Errore nell'inizializzazione della conversazione:", error);
+      throw new Error(`Inizializzazione della conversazione fallita: ${error.message}`);
+    }
+  }
+
+  /**
+   * Continua una conversazione esistente con una nuova domanda
+   * @param {string} conversationId ID della conversazione
+   * @param {string} question Domanda dell'utente
+   * @returns {string} Risposta dell'AI 
+  */
+  async sendReportQuestion(conversationId, question) {
+    try {
+      // Verifica se la conversazione esiste
+      if (!this.conversation.has(conversationId)) {
+        throw new Error(`Conversazione non trovata`);
+      }
+      const conversation = this.conversation.get(conversationId);
+
+      // Aggiungi la domanda dell'utente alla conversazione
+      conversation.messages.push({
+        role: "user",
+        content: question,
+      });
+
+      console.log(`Invio domanda alla conversazione ${conversationId}:`, question);
+
+      // Invia la conversazione all'API OpenAI
+      const response = await this.client.chat.completions.create({
+        model: this.defaultModel,
+        messages: conversation.messages,
+        temperature: 0.3,
+      });
+
+      // Estrai la risposta
+      const answer = response.choices[0].message.content;
+
+      // Aggiungi la risposta alla conversazione
+      conversation.messages.push({
+        role: "assistant",
+        content: answer,
+      });
+
+      // Aggiorna la conversazione nella mappa
+      this.conversation.set(conversationId, conversation);
+
+      console.log(`Risposta ricevuta per la conversazione ${conversationId}:`);
+      return answer;
+    } catch (error) {
+      console.error("Errore nell'invio della domanda:", error);
+      throw new Error(`Errore nell'invio della domanda: ${error.message}`);
+    }
+  }
+
+  /**
+   * Elimina una conversazione 
+   * @param {string} conversationId ID della conversazione
+   */
+  deleteConversation(conversationId) {
+    if (this.conversation.has(conversationId)) {
+      this.conversation.delete(conversationId);
+      console.log(`Conversazione ${conversationId} eliminata.`);
+      return true;
+    }
+    return false;
+  }
+
   // Per conversazioni multi-turno
   async generateChat(messages, options = {}) {
     try {

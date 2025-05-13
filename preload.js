@@ -139,7 +139,46 @@ contextBridge.exposeInMainWorld('superAgenteAPI', {
       console.error('preload: errore in loadSession', error);
       throw error;
     }
+  },
+
+  initReportConversation: async (reportData) => {
+    console.log('preload: richiesta initReportConversation', reportData);
+    try {
+      const result = await ipcRenderer.invoke('init-report-conversation', reportData);
+      console.log('preload: risultato initReportConversation', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in initReportConversation', error);
+      throw error;
+    }
+  },
+
+  // Invio di una domanda alla conversazione
+  sendReportQuestion: async (conversationId, question) => {
+    console.log('preload: richiesta sendReportQuestion', { conversationId, question });
+    try {
+      const result = await ipcRenderer.invoke('send-report-question', conversationId, question);
+      console.log('preload: risultato sendReportQuestion', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in sendReportQuestion', error);
+      throw error;
+    }
+  },
+
+  // Eliminazione di una conversazione
+  deleteReportConversation: async (conversationId) => {
+    console.log('preload: richiesta deleteReportConversation', conversationId);
+    try {
+      const result = await ipcRenderer.invoke('delete-report-conversation', conversationId);
+      console.log('preload: risultato deleteReportConversation', result);
+      return result;
+    } catch (error) {
+      console.error('preload: errore in deleteReportConversation', error);
+      throw error;
+    }
   }
+
 });
 
 console.log('Preload script eseguito, API superAgenteAPI esposta');
